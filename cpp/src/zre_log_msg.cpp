@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre_log_msg.h"
+#include "../include/zre_log_msg.hpp"
 
 //  Structure of our class
 

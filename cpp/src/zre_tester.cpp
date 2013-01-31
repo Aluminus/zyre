@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zre.hpp"
 
 #define MAX_GROUP 10
 
@@ -179,7 +179,7 @@ int main (int argc, char *argv [])
         max_iterations = atoi (argv [2]);
 
     //  We address nodes as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_node);
+    void **pipes = (void**)zmalloc (sizeof (void *) * max_node);
 
     //  We will randomly start and stop node threads
     while (!zctx_interrupted) {

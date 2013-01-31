@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre.h - Zyre library header
+    zre.hpp - Zyre library header
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -50,6 +50,6 @@
 #define ZRE_DISCOVERY_PORT  5670
 
 //  This is the only class that applications should use
-#include "zre_node.h"
+#include "zre_node.hpp"
 
 #endif

@@ -89,5 +89,8 @@
     <ClInclude Include="..\cpp\include\zre_uuid.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\cpp\include\platform.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

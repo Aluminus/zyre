@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_msg.h
+    zre_msg.hpp
     
     Generated codec header for zre_msg
     -------------------------------------------------------------------------
@@ -72,6 +72,7 @@ extern "C" {
 
 //  Opaque class structure
 typedef struct _zre_msg_t zre_msg_t;
+typedef short uint16_t;
 
 //  Create a new zre_msg
 zre_msg_t *

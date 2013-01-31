@@ -25,9 +25,9 @@
 */
 
 #include <czmq.h>
-#include "../include/zre_internal.h"
+#include "../include/zre_internal.hpp"
 
-#include "platform.h"
+#include "../include/platform.hpp"
 #if defined (HAVE_LINUX_WIRELESS_H)
 #   include <linux/wireless.h>
 #else
@@ -120,7 +120,7 @@ zre_udp_new (int port_nbr)
     //  Now get printable address as host name
     if (self->host)
         free (self->host);
-    self->host = zmalloc (INET_ADDRSTRLEN);
+    self->host = (char*)zmalloc (INET_ADDRSTRLEN);
     getnameinfo ((struct sockaddr *) &self->address, sizeof (self->address),
                  self->host, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
     return self;
@@ -189,7 +189,7 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
     //  Store sender address as printable string
     if (self->from)
         free (self->from);
-    self->from = zmalloc (INET_ADDRSTRLEN);
+    self->from = (char*)zmalloc (INET_ADDRSTRLEN);
 #if (defined (__WINDOWS__))
     getnameinfo ((struct sockaddr *) &self->sender, si_len,
                  self->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
@@ -360,7 +360,7 @@ s_get_interface (zre_udp_t *self)
         GAA_FLAG_INCLUDE_PREFIX, NULL, NULL, &addr_size);
     assert (rc == ERROR_BUFFER_OVERFLOW);
 
-    PIP_ADAPTER_ADDRESSES pip_addresses = malloc (addr_size);
+    PIP_ADAPTER_ADDRESSES pip_addresses = (PIP_ADAPTER_ADDRESSES)malloc (addr_size);
     rc = GetAdaptersAddresses (AF_INET,
         GAA_FLAG_INCLUDE_PREFIX, NULL, pip_addresses, &addr_size);
     assert (rc == NO_ERROR);

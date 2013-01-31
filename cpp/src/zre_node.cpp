@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre_internal.h"
+#include "../include/zre_internal.hpp"
 
 //  Optional global context for zre_node instances
 zctx_t *zre_global_ctx = NULL;
@@ -463,7 +463,7 @@ agent_recv_from_api (agent_t *self)
         //  Virtual filename must start with slash
         assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (logical) + 3);
+        char *symlink = (char*)malloc (strlen (logical) + 3);
         sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         int rc = fmq_file_output (file);
@@ -480,7 +480,7 @@ agent_recv_from_api (agent_t *self)
         //  Logical filename must start with slash
         assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (logical) + 3);
+        char *symlink = (char*)malloc (strlen (logical) + 3);
         sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         fmq_file_remove (file);

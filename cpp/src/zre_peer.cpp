@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre_internal.h"
+#include "../include/zre_internal.hpp"
 
 
 //  ---------------------------------------------------------------------

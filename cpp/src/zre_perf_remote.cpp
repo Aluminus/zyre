@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zre.hpp"
 
 // to test performances, run zre_perf_remote [node_count] first then zre_perf_local
 
@@ -150,7 +150,7 @@ int main (int argc, char *argv [])
         max_node = atoi (argv [1]);
 
     //  We address nodes as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_node);
+    void **pipes = (void**)zmalloc (sizeof (void *) * max_node);
 
     for (nbr_node = 0; nbr_node < max_node; nbr_node++) {
         pipes [nbr_node] = zthread_fork (ctx, node_task, NULL);

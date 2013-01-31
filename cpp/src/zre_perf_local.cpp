@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zre.hpp"
 
 static bool
 s_node_recv (zre_node_t *node, char* command, char* expected)
@@ -83,7 +83,7 @@ main (int argc, char *argv [])
     int64_t start = zclock_time ();
     int64_t elapse;
 
-    char **peers = zmalloc (sizeof (char *) * max_node);
+    char **peers = (char**)zmalloc (sizeof (char *) * max_node);
 
     while (true) {
         zmsg_t *incoming = zre_node_recv (node);

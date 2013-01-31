@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zre.hpp"
 
 int main (int argc, char *argv [])
 {

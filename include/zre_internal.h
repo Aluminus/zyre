@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_internal.h - Zyre internal library header
+    zre_internal.hpp - Zyre internal library header
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -27,7 +27,7 @@
 #ifndef __ZRE_INTERNAL_H_INCLUDED__
 #define __ZRE_INTERNAL_H_INCLUDED__
 
-#include "zre.h"
+#include "zre.hpp"
 
 //  Constants, to be configured/reviewed
 
@@ -37,12 +37,12 @@
 
 //  Classes in this stack
 
-#include "zre_udp.h"
-#include "zre_msg.h"
-#include "zre_peer.h"
-#include "zre_group.h"
-#include "zre_log.h"
-#include "zre_log_msg.h"
-#include "zre_uuid.h"
+#include "zre_udp.hpp"
+#include "zre_msg.hpp"
+#include "zre_peer.hpp"
+#include "zre_group.hpp"
+#include "zre_log.hpp"
+#include "zre_log_msg.hpp"
+#include "zre_uuid.hpp"
 
 #endif
