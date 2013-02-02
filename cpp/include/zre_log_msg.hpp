@@ -27,6 +27,8 @@
 #ifndef __ZRE_LOG_MSG_H_INCLUDED__
 #define __ZRE_LOG_MSG_H_INCLUDED__
 
+#include <cstdint>
+
 /*  These are the zre_log_msg messages
     LOG - Log an event
         level         number 1
@@ -54,7 +56,6 @@ extern "C" {
 
 //  Opaque class structure
 typedef struct _zre_log_msg_t zre_log_msg_t;
-typedef short uint16_t;
 
 //  Create a new zre_log_msg
 zre_log_msg_t *

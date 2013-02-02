@@ -27,11 +27,7 @@
 #ifndef __ZRE_NODE_H_INCLUDED__
 #define __ZRE_NODE_H_INCLUDED__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct _zre_node_t zre_node_t;
+#include <memory>
 
 //  Optional global context for zre_node instances
 //  Used for large-scale testing simulation only
@@ -40,57 +36,61 @@ CZMQ_EXPORT extern zctx_t *zre_global_ctx;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT extern char *zre_global_tmpdir;
 
+class zre_node
+{
+public:
+
 //  Constructor
-CZMQ_EXPORT zre_node_t *
-    zre_node_new (void);
+CZMQ_EXPORT zre_node ();
 
 //  Destructor
-CZMQ_EXPORT void
-    zre_node_destroy (zre_node_t **self_p);
+CZMQ_EXPORT ~zre_node ();
 
 //  Set node tracing on or off
 CZMQ_EXPORT void
-    zre_node_verbose_set (zre_node_t *self, bool verbose);
+    verbose_set (bool verbose);
 
 //  Join a group
 CZMQ_EXPORT int
-    zre_node_join (zre_node_t *self, const char *group);
+    join (const char *group);
     
 //  Leave a group
 CZMQ_EXPORT int
-    zre_node_leave (zre_node_t *self, const char *group);
+    leave (const char *group);
 
 //  Receive next message from node
 CZMQ_EXPORT zmsg_t *
-    zre_node_recv (zre_node_t *self);
+    recv ();
 
 //  Send message to single peer; peer ID is first frame in message
 CZMQ_EXPORT int
-    zre_node_whisper (zre_node_t *self, zmsg_t **msg_p);
+    whisper (zmsg_t **msg_p);
     
 //  Send message to a group of peers
 CZMQ_EXPORT int
-    zre_node_shout (zre_node_t *self, zmsg_t **msg_p);
+    shout (zmsg_t **msg_p);
     
 //  Return node handle, for polling
-CZMQ_EXPORT void *
-    zre_node_handle (zre_node_t *self);
+CZMQ_EXPORT const void *
+    handle ();
 
 //  Set node header value
 CZMQ_EXPORT void
-    zre_node_header_set (zre_node_t *self, char *name, char *format, ...);
+    header_set (char *name, char *format, ...);
 
 //  Publish file under some logical name
 //  Physical name is the actual file location
 CZMQ_EXPORT void
-    zre_node_publish (zre_node_t *self, char *logical, char *physical);
+    publish (char *logical, char *physical);
 
 //  Retract published file 
 CZMQ_EXPORT void
-    zre_node_retract (zre_node_t *self, char *logical);
+    retract (char *logical);
 
-#ifdef __cplusplus
-}
-#endif
+private:
+	zctx_t *ctx;                //  Our context wrapper
+    bool ctx_owned;             //  True if we created the context
+    void *pipe;                 //  Pipe through to agent
+};
 
 #endif

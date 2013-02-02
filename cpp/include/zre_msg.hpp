@@ -27,6 +27,8 @@
 #ifndef __ZRE_MSG_H_INCLUDED__
 #define __ZRE_MSG_H_INCLUDED__
 
+#include <cstdint>
+
 /*  These are the zre_msg messages
     HELLO - Greet a peer so it can connect back to us
         sequence      number 2
@@ -72,7 +74,6 @@ extern "C" {
 
 //  Opaque class structure
 typedef struct _zre_msg_t zre_msg_t;
-typedef short uint16_t;
 
 //  Create a new zre_msg
 zre_msg_t *
