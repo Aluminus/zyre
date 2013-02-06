@@ -71,8 +71,8 @@ CZMQ_EXPORT int
     shout (zmsg_t **msg_p);
     
 //  Return node handle, for polling
-CZMQ_EXPORT const void *
-    handle ();
+CZMQ_EXPORT void *
+    handle () const;
 
 //  Set node header value
 CZMQ_EXPORT void

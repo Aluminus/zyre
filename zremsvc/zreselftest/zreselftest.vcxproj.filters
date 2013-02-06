@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\zre_selftest.c">
+    <ClCompile Include="..\..\cpp\src\zre_selftest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -43,7 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\filemq\include;..\..\libzmq\include;..\..\czmq\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\ZeroMQ 3.2.2\include;..\..\filemq\include;..\..\libzmq\include;..\..\czmq\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -71,12 +71,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\zre_selftest.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\zremsvc\zremsvc.vcxproj">
+    <ProjectReference Include="..\zremsvc.vcxproj">
       <Project>{f69f1834-7d6b-4b2d-9349-7af16b4d8971}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\cpp\src\zre_selftest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

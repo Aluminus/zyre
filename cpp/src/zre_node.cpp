@@ -130,8 +130,8 @@ zre_node::shout (zmsg_t **msg_p)
 //  ---------------------------------------------------------------------
 //  Return node handle, for polling
 
-const void *
-zre_node::handle ()
+void *
+zre_node::handle () const
 {    
     return pipe;
 }
