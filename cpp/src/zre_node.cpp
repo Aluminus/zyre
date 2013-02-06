@@ -277,14 +277,14 @@ private:
 
 agent::agent(zctx_t *agentContext, void *agentPipe)
 {
-    void *inbox = zsocket_new (ctx, ZMQ_ROUTER);
+    void *agentInbox = zsocket_new (ctx, ZMQ_ROUTER);
     if (!inbox)                 //  Interrupted
         return;
 
-    ctx = ctx;
-    pipe = pipe;
+    ctx = agentContext;
+    pipe = agentPipe;
     udp = zre_udp_new (ZRE_DISCOVERY_PORT);
-    inbox = inbox;
+    inbox = agentInbox;
     host = zre_udp_host (udp);
     port = zsocket_bind (inbox, "tcp://*:*");
     sprintf (endpoint, "%s:%d", host, port);
