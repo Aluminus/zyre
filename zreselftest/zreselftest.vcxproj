@@ -11,18 +11,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F69F1834-7D6B-4B2D-9349-7AF16B4D8971}</ProjectGuid>
-    <RootNamespace>zremsvc</RootNamespace>
+    <ProjectGuid>{3639C658-C810-4E1E-A998-A04BA2D30E4E}</ProjectGuid>
+    <RootNamespace>zreselftest</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v110</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v110</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -43,16 +43,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Program Files\ZeroMQ 3.2.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <CompileAs>Default</CompileAs>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\filemq\include;..\..\libzmq\include;..\..\czmq\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files\ZeroMQ 3.2.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libzmq_d.lib;czmq_d.lib;filemq_d.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\ZeroMQ 3.2.2\lib;C:\Program Files\ZeroMQ 3.2.2\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>zremsvc_d.lib;czmq_d.lib;filemq_d.lib;libzmq_d.lib;Ws2_32.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -61,42 +58,25 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>C:\Program Files\ZeroMQ 3.2.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>..\..\filemq\include;..\..\libzmq\include;..\..\czmq\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libzmq.lib;czmq.lib;filemq.lib;Ws2_32.lib;ssleay32MT.lib;Iphlpapi.lib;libeay32MT.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\OpenSSL-Win32\lib\VC\static;C:\Program Files\ZeroMQ 3.2.2\bin;C:\Program Files\ZeroMQ 3.2.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>zremsvc.lib;libzmq.lib;czmq.lib;Ws2_32.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\ZeroMQ 3.2.2\lib;..\zremsvc\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\cpp\src\zre_group.cpp" />
-    <ClCompile Include="..\cpp\src\zre_log.cpp" />
-    <ClCompile Include="..\cpp\src\zre_log_msg.cpp" />
-    <ClCompile Include="..\cpp\src\zre_msg.cpp" />
-    <ClCompile Include="..\cpp\src\zre_node.cpp" />
-    <ClCompile Include="..\cpp\src\zre_peer.cpp" />
-    <ClCompile Include="..\cpp\src\zre_udp.cpp" />
-    <ClCompile Include="..\cpp\src\zre_uuid.cpp" />
+    <ClCompile Include="..\src\zre_selftest.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\cpp\include\platform.hpp" />
-    <ClInclude Include="..\cpp\include\zre.hpp" />
-    <ClInclude Include="..\cpp\include\zre_group.hpp" />
-    <ClInclude Include="..\cpp\include\zre_internal.hpp" />
-    <ClInclude Include="..\cpp\include\zre_log.hpp" />
-    <ClInclude Include="..\cpp\include\zre_log_msg.hpp" />
-    <ClInclude Include="..\cpp\include\zre_msg.hpp" />
-    <ClInclude Include="..\cpp\include\zre_node.hpp" />
-    <ClInclude Include="..\cpp\include\zre_peer.hpp" />
-    <ClInclude Include="..\cpp\include\zre_udp.hpp" />
-    <ClInclude Include="..\cpp\include\zre_uuid.hpp" />
+    <ProjectReference Include="..\zremsvc\zremsvc.vcxproj">
+      <Project>{f69f1834-7d6b-4b2d-9349-7af16b4d8971}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
