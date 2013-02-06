@@ -68,10 +68,6 @@
 #define ZRE_MSG_PING                        6
 #define ZRE_MSG_PING_OK                     7
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //  Opaque class structure
 typedef struct _zre_msg_t zre_msg_t;
 
@@ -231,9 +227,6 @@ void
 //  Self test of this class
 int
     zre_msg_test (bool verbose);
-    
-#ifdef __cplusplus
-}
-#endif
+  
 
 #endif

@@ -50,10 +50,6 @@
 
 #define ZRE_LOG_MSG_LOG                     1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 //  Opaque class structure
 typedef struct _zre_log_msg_t zre_log_msg_t;
 
@@ -145,8 +141,4 @@ void
 int
     zre_log_msg_test (bool verbose);
     
-#ifdef __cplusplus
-}
-#endif
-
 #endif

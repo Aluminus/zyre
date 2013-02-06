@@ -27,10 +27,6 @@
 #ifndef __ZRE_UDP_H_INCLUDED__
 #define __ZRE_UDP_H_INCLUDED__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _zre_udp_t zre_udp_t;
 
 //  Constructor
@@ -60,9 +56,5 @@ char *
 //  Return IP address of peer that sent last message
 char *
     zre_udp_from (zre_udp_t *self);
-    
-#ifdef __cplusplus
-}
-#endif
-
+   
 #endif

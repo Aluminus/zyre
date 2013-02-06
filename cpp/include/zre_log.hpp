@@ -27,10 +27,6 @@
 #ifndef __ZRE_LOG_H_INCLUDED__
 #define __ZRE_LOG_H_INCLUDED__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _zre_log_t zre_log_t;
 
 //  Constructor
@@ -48,9 +44,5 @@ void
 //  Record one log event
 void
     zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

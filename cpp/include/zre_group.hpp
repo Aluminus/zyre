@@ -27,10 +27,6 @@
 #ifndef __ZRE_GROUP_H_INCLUDED__
 #define __ZRE_GROUP_H_INCLUDED__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _zre_group_t zre_group_t;
 
 //  Constructor
@@ -52,9 +48,5 @@ void
 //  Send message to all peers in group
 void
     zre_group_send (zre_group_t *self, zre_msg_t **msg_p);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

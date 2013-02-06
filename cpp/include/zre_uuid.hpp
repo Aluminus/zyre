@@ -29,10 +29,6 @@
 
 #define ZRE_UUID_LEN    16
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _zre_uuid_t zre_uuid_t;
 
 //  Constructor
@@ -66,9 +62,5 @@ bool
 //  Self test of this class
 int
     zre_uuid_test (bool verbose);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

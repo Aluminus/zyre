@@ -27,10 +27,6 @@
 #ifndef __ZRE_PEER_H_INCLUDED__
 #define __ZRE_PEER_H_INCLUDED__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct _zre_peer_t zre_peer_t;
 
 //  Constructor
@@ -104,9 +100,5 @@ void
 //  Check peer message sequence
 bool
     zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

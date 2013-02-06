@@ -242,13 +242,13 @@ public:
 	int recv_fmq_event ();
 	int ping_peer (const char *key, void *item);
 
-	inline void* get_pipe(){return pipe;}
-	inline zre_udp_t* get_udp(){return udp;}
-	inline fmq_client_t* get_fmq_client(){return fmq_client;}
-	inline void* get_inbox(){return inbox;}
-	inline zhash_t* get_peers(){return peers;}
-	inline zhash_t* get_peer_groups(){return peer_groups;}
-	inline zre_log_t* get_log(){return log;}
+	void* get_pipe(){return pipe;}
+	zre_udp_t* get_udp(){return udp;}
+	fmq_client_t* get_fmq_client(){return fmq_client;}
+	void* get_inbox(){return inbox;}
+	zhash_t* get_peers(){return peers;}
+	zhash_t* get_peer_groups(){return peer_groups;}
+	zre_log_t* get_log(){return log;}
 
 private:
 	zctx_t *ctx;                //  CZMQ context
