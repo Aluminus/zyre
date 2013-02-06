@@ -31,6 +31,8 @@
 CZMQ_EXPORT zctx_t *zre_global_ctx = nullptr;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
+// TODO: Remove when linker problems are fixed
+CZMQ_EXPORT volatile int zctx_interrupted = 0; 
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -277,7 +279,7 @@ private:
 
 agent::agent(zctx_t *agentContext, void *agentPipe)
 {
-    void *agentInbox = zsocket_new (ctx, ZMQ_ROUTER);
+    void *agentInbox = zsocket_new (agentContext, ZMQ_ROUTER);
     if (!inbox)                 //  Interrupted
         return;
 
