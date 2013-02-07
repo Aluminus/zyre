@@ -88,12 +88,12 @@ zre_group_destroy (zre_group_t **self_p)
 //  Ignore duplicate joins
 
 void
-zre_group_join (zre_group_t *self, zre_peer_t *peer)
+zre_group_join (zre_group_t *self, zre_peer *peer)
 {
     assert (self);
     assert (peer);
-    zhash_insert (self->peers, zre_peer_identity (peer), peer);
-    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
+    zhash_insert (self->peers, peer->identity(), peer);
+    peer->status_set(peer->status() + 1);
 }
 
 
@@ -101,21 +101,21 @@ zre_group_join (zre_group_t *self, zre_peer_t *peer)
 //  Remove peer from group
 
 void
-zre_group_leave (zre_group_t *self, zre_peer_t *peer)
+zre_group_leave (zre_group_t *self, zre_peer *peer)
 {
     assert (self);
     assert (peer);
-    zhash_delete (self->peers, zre_peer_identity (peer));
-    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
+	zhash_delete (self->peers, peer->identity());
+	peer->status_set(peer->status() + 1);
 }
 
 
 static int
 s_peer_send (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zre_peer *peer = (zre_peer *) item;
     zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
-    zre_peer_send (peer, &msg);
+	peer->send(&msg);
     return 0;
 }
 

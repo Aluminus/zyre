@@ -39,11 +39,11 @@ void
 
 //  Add peer to group
 void
-    zre_group_join (zre_group_t *self, zre_peer_t *peer);
+    zre_group_join (zre_group_t *self, zre_peer *peer);
 
 //  Remove peer from group
 void
-    zre_group_leave (zre_group_t *self, zre_peer_t *peer);
+    zre_group_leave (zre_group_t *self, zre_peer *peer);
 
 //  Send message to all peers in group
 void

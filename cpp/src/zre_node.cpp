@@ -32,7 +32,7 @@ CZMQ_EXPORT zctx_t *zre_global_ctx = nullptr;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
 // TODO: Remove when linker problems are fixed
-//CZMQ_EXPORT volatile int zctx_interrupted = 0; 
+CZMQ_EXPORT volatile int zctx_interrupted = 0; 
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -241,10 +241,10 @@ public:
 	~agent();
 
 	int recv_from_api();
-	zre_peer_t* s_require_peer (char *identity, char *address, uint16_t port);
+	zre_peer* s_require_peer (char *identity, char *address, uint16_t port);
 	zre_group_t* s_require_peer_group (char *name);
-	zre_group_t* s_join_peer_group (zre_peer_t *peer, char *name);
-	zre_group_t* s_leave_peer_group (zre_peer_t *peer, char *name);
+	zre_group_t* s_join_peer_group (zre_peer *peer, char *name);
+	zre_group_t* s_leave_peer_group (zre_peer *peer, char *name);
 	int recv_from_peer ();
 	void beacon_send ();
 	int recv_udp_beacon ();
@@ -368,9 +368,9 @@ agent::~agent ()
 static int
 s_peer_send (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zre_peer *peer = (zre_peer *) item;
     zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
-    zre_peer_send (peer, &msg);
+    peer->send(&msg);
     return 0;
 }
 
@@ -389,14 +389,14 @@ agent::recv_from_api ()
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
-        zre_peer_t *peer = (zre_peer_t *) zhash_lookup (peers, identity);
+        zre_peer *peer = (zre_peer *) zhash_lookup (peers, identity);
         
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_content_set (msg, zmsg_pop (request));
-            zre_peer_send (peer, &msg);
+			peer->send(&msg);
         }
         free (identity);
     }
@@ -496,27 +496,27 @@ agent::recv_from_api ()
 static int
 agent_peer_purge (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zre_peer *peer = (zre_peer *) item;
     char *endpoint = (char *) argument;
-    if (streq (zre_peer_endpoint (peer), endpoint))
-        zre_peer_disconnect (peer);
+    if (streq (peer->endpoint(), endpoint))
+        peer->disconnect();
     return 0;
 }
 
 //  Find or create peer via its UUID string
 
-zre_peer_t *
+zre_peer *
 agent::s_require_peer (char *identity, char *address, uint16_t port)
 {
-    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (peers, identity);
+    zre_peer *peer = (zre_peer *) zhash_lookup (peers, identity);
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
         snprintf (endpoint, 100, "%s:%hu", address, port);
         zhash_foreach (peers, agent_peer_purge, endpoint);
 
-        peer = zre_peer_new (identity, peers, ctx);
-        zre_peer_connect (peer, identity, endpoint);
+        peer = new zre_peer(identity, peers, ctx);
+        peer->connect(identity, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -525,10 +525,10 @@ agent::s_require_peer (char *identity, char *address, uint16_t port)
         zre_msg_groups_set (msg, zhash_keys (own_groups));
         zre_msg_status_set (msg, status);
         zre_msg_headers_set (msg, zhash_dup (headers));
-        zre_peer_send (peer, &msg);
+		peer->send(&msg);
         
         zre_log_info (log, ZRE_LOG_MSG_EVENT_ENTER,
-                      zre_peer_endpoint (peer), endpoint);
+			peer->endpoint(), endpoint);
 
         //  Now tell the caller about the peer
         zstr_sendm (pipe, "ENTER");
@@ -550,28 +550,28 @@ agent::s_require_peer_group (char *name)
 }
 
 zre_group_t *
-agent::s_join_peer_group (zre_peer_t *peer, char *name)
+agent::s_join_peer_group (zre_peer *peer, char *name)
 {
     zre_group_t *group = s_require_peer_group (name);
     zre_group_join (group, peer);
 
     //  Now tell the caller about the peer joined group
     zstr_sendm (pipe, "JOIN");
-    zstr_sendm (pipe, zre_peer_identity (peer));
+	zstr_sendm (pipe, peer->identity());
     zstr_send (pipe, name);
 
     return group;
 }
 
 zre_group_t *
-agent::s_leave_peer_group (zre_peer_t *peer, char *name)
+agent::s_leave_peer_group (zre_peer *peer, char *name)
 {
     zre_group_t *group = s_require_peer_group (name);
     zre_group_leave (group, peer);
 
     //  Now tell the caller about the peer left group
     zstr_sendm (pipe, "LEAVE");
-    zstr_sendm (pipe, zre_peer_identity (peer));
+	zstr_sendm (pipe, peer->identity());
     zstr_send (pipe, name);
 
     return group;
@@ -591,20 +591,20 @@ agent::recv_from_peer ()
         
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
-    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (peers, identity);
+    zre_peer *peer = (zre_peer *) zhash_lookup (peers, identity);
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         peer = s_require_peer (
             identity, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
-        zre_peer_ready_set (peer, true);
+        peer->ready_set(true);
     }
     //  Ignore command if peer isn't ready
-    if (peer == NULL || !zre_peer_ready (peer)) {
+	if (peer == NULL || !peer->ready()) {
 				free(identity);
         zre_msg_destroy (&msg);
         return 0;
     }
-    if (!zre_peer_check_message (peer, msg)) {
+    if (!peer->check_message(msg)) {
         zclock_log ("W: [%s] lost messages from %s", identity, identity);
     }
 
@@ -617,10 +617,10 @@ agent::recv_from_peer ()
             name = zre_msg_groups_next (msg);
         }
         //  Hello command holds latest status of peer
-        zre_peer_status_set (peer, zre_msg_status (msg));
+        peer->status_set(zre_msg_status (msg));
         
         //  Store peer headers for future reference
-        zre_peer_headers_set (peer, zre_msg_headers (msg));
+        peer->headers_set(zre_msg_headers (msg));
 
         //  If peer is a ZRE/LOG collector, connect to it
         char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
@@ -652,23 +652,23 @@ agent::recv_from_peer ()
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
-        zre_peer_send (peer, &msg);
+		peer->send(&msg);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
         s_join_peer_group (peer, zre_msg_group (msg));
-        assert (zre_msg_status (msg) == zre_peer_status (peer));
+        assert (zre_msg_status (msg) == peer->status());
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
         s_leave_peer_group (peer, zre_msg_group (msg));
-        assert (zre_msg_status (msg) == zre_peer_status (peer));
+        assert (zre_msg_status (msg) == peer->status());
     }
     free (identity);
     zre_msg_destroy (&msg);
     
     //  Activity from peer resets peer timers
-    zre_peer_refresh (peer);
+	peer->refresh();
     return 0;
 }
 
@@ -715,9 +715,9 @@ agent::recv_udp_beacon ()
     if (zre_uuid_neq (uuid, beacon.uuid)) {
         zre_uuid_t *uuid = zre_uuid_new ();
         zre_uuid_set (uuid, beacon.uuid);
-        zre_peer_t *peer = s_require_peer (
+        zre_peer *peer = s_require_peer (
             zre_uuid_str (uuid), zre_udp_from (udp), ntohs (beacon.port));
-        zre_peer_refresh (peer);
+		peer->refresh();
         zre_uuid_destroy (&uuid);
     }
     return 0;
@@ -743,7 +743,7 @@ static int
 agent_peer_delete (const char *key, void *item, void *argument)
 {
     zre_group_t *group = (zre_group_t *) item;
-    zre_peer_t *peer = (zre_peer_t *) argument;
+    zre_peer *peer = (zre_peer *) argument;
     zre_group_leave (group, peer);
     return 0;
 }
@@ -755,12 +755,12 @@ agent_peer_delete (const char *key, void *item, void *argument)
 int
 agent::ping_peer (const char *key, void *item)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
-    char *identity = zre_peer_identity (peer);
-    if (zclock_time () >= zre_peer_expired_at (peer)) {
+    zre_peer *peer = (zre_peer *) item;
+	char *identity = peer->identity();
+	if (zclock_time () >= peer->expired_at()) {
         zre_log_info (get_log(), ZRE_LOG_MSG_EVENT_EXIT,
-                      zre_peer_endpoint (peer),
-                      zre_peer_endpoint (peer));
+			peer->endpoint(),
+			peer->endpoint());
         //  If peer has really vanished, expire it
         zstr_sendm (get_pipe(), "EXIT");
         zstr_send (get_pipe(), identity);
@@ -768,13 +768,13 @@ agent::ping_peer (const char *key, void *item)
         zhash_delete (get_peers(), identity);
     }
     else
-    if (zclock_time () >= zre_peer_evasive_at (peer)) {
+		if (zclock_time () >= peer->evasive_at()) {
         //  If peer is being evasive, force a TCP ping.
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
-        zre_peer_send (peer, &msg);
+		peer->send(&msg);
     }
     return 0;
 }

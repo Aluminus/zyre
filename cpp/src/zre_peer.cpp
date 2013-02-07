@@ -31,7 +31,7 @@
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_peer_t {
+struct zre_peer_data_t {
     zctx_t *ctx;                //  CZMQ context
     void *mailbox;              //  Socket through to peer
     char *identity;             //  Identity string
@@ -52,49 +52,41 @@ struct _zre_peer_t {
 static void
 s_delete_peer (void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) argument;
-    zre_peer_destroy (&peer);
+    zre_peer *peer = (zre_peer *) argument;
+    delete(peer);
 }
 
 
 //  ---------------------------------------------------------------------
 //  Construct new peer object
 
-zre_peer_t *
-zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
+zre_peer::zre_peer (char *identity, zhash_t *container, zctx_t *ctx)
 {
-    zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
-    self->ctx = ctx;
-    self->identity = strdup (identity);
-    self->ready = false;
-    self->connected = false;
-    self->sent_sequence = 0;
-    self->want_sequence = 0;
+    myData = (zre_peer_data_t *) zmalloc (sizeof (zre_peer_data_t));
+    myData->ctx = ctx;
+    myData->identity = strdup (identity);
+    myData->ready = false;
+    myData->connected = false;
+    myData->sent_sequence = 0;
+    myData->want_sequence = 0;
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, identity, self);
+        zhash_insert (container, identity, myData);
         zhash_freefn (container, identity, s_delete_peer);
     }
-    return self;
 }
 
 
 //  ---------------------------------------------------------------------
 //  Destroy peer object
 
-void
-zre_peer_destroy (zre_peer_t **self_p)
+zre_peer::~zre_peer ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_peer_t *self = *self_p;
-        zre_peer_disconnect (self);
-        zhash_destroy (&self->headers);
-        free (self->identity);
-        free (self);
-        *self_p = NULL;
-    }
+    disconnect ();
+    zhash_destroy (&myData->headers);
+    free (myData->identity);
+    free (myData);
 }
 
 
@@ -103,30 +95,29 @@ zre_peer_destroy (zre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
+zre_peer::connect (char *reply_to, char *endpoint)
 {
-    assert (self);
-    assert (!self->connected);
+    assert (!myData->connected);
 
     //  Create new outgoing socket (drop any messages in transit)
-    self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
+    myData->mailbox = zsocket_new (myData->ctx, ZMQ_DEALER);
     //  Null if shutting down
-    if (self->mailbox) {
+    if (myData->mailbox) {
         //  Set our caller 'From' identity so that receiving node knows
         //  who each message came from.
-        zsocket_set_identity (self->mailbox, reply_to);
+        zsocket_set_identity (myData->mailbox, reply_to);
 
         //  Set a high-water mark that allows for reasonable activity
-        zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+        zsocket_set_sndhwm (myData->mailbox, PEER_EXPIRED * 100);
 
         //  Send messages immediately or return EAGAIN
-        zsocket_set_sndtimeo (self->mailbox, 0);
+        zsocket_set_sndtimeo (myData->mailbox, 0);
 
         //  Connect through to peer node
-        zsocket_connect (self->mailbox, "tcp://%s", endpoint);
-        self->endpoint = strdup (endpoint);
-        self->connected = true;
-        self->ready = false;
+        zsocket_connect (myData->mailbox, "tcp://%s", endpoint);
+        myData->endpoint = strdup (endpoint);
+        myData->connected = true;
+        myData->ready = false;
     }
 }
 
@@ -136,16 +127,15 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 //  No more messages will be sent to peer until connected again
 
 void
-zre_peer_disconnect (zre_peer_t *self)
+zre_peer::disconnect ()
 {
     //  If connected, destroy socket and drop all pending messages
-    assert (self);
-    if (self->connected) {
-        zsocket_destroy (self->ctx, self->mailbox);
-        free (self->endpoint);
-        self->mailbox = NULL;
-        self->endpoint = NULL;
-        self->connected = false;
+    if (myData->connected) {
+        zsocket_destroy (myData->ctx, myData->mailbox);
+        free (myData->endpoint);
+        myData->mailbox = NULL;
+        myData->endpoint = NULL;
+        myData->connected = false;
     }
 }
 
@@ -154,13 +144,12 @@ zre_peer_disconnect (zre_peer_t *self)
 //  Send message to peer
 
 int
-zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
+zre_peer::send (zre_msg_t **msg_p)
 {
-    assert (self);
-    if (self->connected) {
-        zre_msg_sequence_set (*msg_p, ++(self->sent_sequence));
-        if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
-            zre_peer_disconnect (self);
+    if (myData->connected) {
+        zre_msg_sequence_set (*msg_p, ++(myData->sent_sequence));
+        if (zre_msg_send (msg_p, myData->mailbox) && errno == EAGAIN) {
+            disconnect ();
             return -1;
         }
     }
@@ -175,10 +164,9 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
 //  Return peer connected status
 
 bool
-zre_peer_connected (zre_peer_t *self)
+zre_peer::connected ()
 {
-    assert (self);
-    return self->connected;
+    return myData->connected;
 }
 
 
@@ -186,10 +174,9 @@ zre_peer_connected (zre_peer_t *self)
 //  Return peer identity string
 
 char *
-zre_peer_identity (zre_peer_t *self)
+zre_peer::identity ()
 {
-    assert (self);
-    return self->identity;
+    return myData->identity;
 }
 
 
@@ -197,11 +184,10 @@ zre_peer_identity (zre_peer_t *self)
 //  Return peer connection endpoint
 
 char *
-zre_peer_endpoint (zre_peer_t *self)
+zre_peer::endpoint ()
 {
-    assert (self);
-    if (self->connected)
-        return self->endpoint;
+    if (myData->connected)
+        return myData->endpoint;
     else
         return "";
 }
@@ -211,11 +197,10 @@ zre_peer_endpoint (zre_peer_t *self)
 //  Register activity at peer
 
 void
-zre_peer_refresh (zre_peer_t *self)
+zre_peer::refresh ()
 {
-    assert (self);
-    self->evasive_at = zclock_time () + PEER_EVASIVE;
-    self->expired_at = zclock_time () + PEER_EXPIRED;
+    myData->evasive_at = zclock_time () + PEER_EVASIVE;
+    myData->expired_at = zclock_time () + PEER_EXPIRED;
 }
 
 
@@ -223,10 +208,9 @@ zre_peer_refresh (zre_peer_t *self)
 //  Return peer future evasive time
 
 int64_t
-zre_peer_evasive_at (zre_peer_t *self)
+zre_peer::evasive_at ()
 {
-    assert (self);
-    return self->evasive_at;
+    return myData->evasive_at;
 }
 
 
@@ -234,10 +218,9 @@ zre_peer_evasive_at (zre_peer_t *self)
 //  Return peer future expired time
 
 int64_t
-zre_peer_expired_at (zre_peer_t *self)
+zre_peer::expired_at ()
 {
-    assert (self);
-    return self->expired_at;
+    return myData->expired_at;
 }
 
 
@@ -247,10 +230,9 @@ zre_peer_expired_at (zre_peer_t *self)
 //  check against its claimed status, to detect message loss.
 
 byte
-zre_peer_status (zre_peer_t *self)
+zre_peer::status ()
 {
-    assert (self);
-    return self->status;
+    return myData->status;
 }
 
 
@@ -258,10 +240,9 @@ zre_peer_status (zre_peer_t *self)
 //  Set peer status
 
 void
-zre_peer_status_set (zre_peer_t *self, byte status)
+zre_peer::status_set (byte status)
 {
-    assert (self);
-    self->status = status;
+    myData->status = status;
 }
 
 
@@ -269,10 +250,9 @@ zre_peer_status_set (zre_peer_t *self, byte status)
 //  Return peer ready state
 
 byte
-zre_peer_ready (zre_peer_t *self)
+zre_peer::ready ()
 {
-    assert (self);
-    return self->ready;
+    return myData->ready;
 }
 
 
@@ -280,10 +260,9 @@ zre_peer_ready (zre_peer_t *self)
 //  Set peer ready
 
 void
-zre_peer_ready_set (zre_peer_t *self, bool ready)
+zre_peer::ready_set (bool ready)
 {
-    assert (self);
-    self->ready = ready;
+    myData->ready = ready;
 }
 
 
@@ -291,12 +270,11 @@ zre_peer_ready_set (zre_peer_t *self, bool ready)
 //  Get peer header value
 
 char *
-zre_peer_header (zre_peer_t *self, char *key, char *default_value)
+zre_peer::header (char *key, char *default_value)
 {
-    assert (self);
     char *value = NULL;
-    if (self->headers)
-        value = (char *) (zhash_lookup (self->headers, key));
+    if (myData->headers)
+        value = (char *) (zhash_lookup (myData->headers, key));
     if (!value)
         value = default_value;
 
@@ -308,11 +286,10 @@ zre_peer_header (zre_peer_t *self, char *key, char *default_value)
 //  Set peer headers from provided dictionary
 
 void
-zre_peer_headers_set (zre_peer_t *self, zhash_t *headers)
+zre_peer::headers_set (zhash_t *headers)
 {
-    assert (self);
-    zhash_destroy (&self->headers);
-    self->headers = zhash_dup (headers);
+    zhash_destroy (&myData->headers);
+    myData->headers = zhash_dup (headers);
 }
 
 
@@ -320,15 +297,14 @@ zre_peer_headers_set (zre_peer_t *self, zhash_t *headers)
 //  Check peer message sequence
 
 bool
-zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
+zre_peer::check_message (zre_msg_t *msg)
 {
-    assert (self);
     assert (msg);
     uint16_t recd_sequence = zre_msg_sequence (msg);
 
-    bool valid = (++(self->want_sequence) == recd_sequence);
+    bool valid = (++(myData->want_sequence) == recd_sequence);
     if (!valid)
-        --(self->want_sequence);    //  Rollback
+        --(myData->want_sequence);    //  Rollback
 
     return valid;
 }
