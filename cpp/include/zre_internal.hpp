@@ -27,6 +27,9 @@
 #ifndef __ZRE_INTERNAL_H_INCLUDED__
 #define __ZRE_INTERNAL_H_INCLUDED__
 
+#ifdef __WINDOWS__
+#define assert(expr) _ASSERTE(expr)
+#endif
 #include "zre.hpp"
 
 //  Constants, to be configured/reviewed

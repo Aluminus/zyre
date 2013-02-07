@@ -32,7 +32,7 @@ CZMQ_EXPORT zctx_t *zre_global_ctx = nullptr;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
 // TODO: Remove when linker problems are fixed
-CZMQ_EXPORT volatile int zctx_interrupted = 0; 
+//CZMQ_EXPORT volatile int zctx_interrupted = 0; 
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -185,15 +185,22 @@ zre_node::retract (char *logical)
 //  Get temporary directory of INBOX and OUTBOX
 
 static char *
-s_tmpdir (void)
+s_tmpdir ()
 {
     static char our_tmpdir [255] = { 0 };
     if (!zre_global_tmpdir) {
         zre_global_tmpdir = our_tmpdir;
         char *tmp_env = getenv ("TMPDIR");
         if (!tmp_env)
+#ifdef __WINDOWS__
+		{	
+			GetTempPath(255, our_tmpdir);
+			tmp_env = our_tmpdir;
+		}
+#else
             tmp_env = "/tmp";
         strcat (zre_global_tmpdir, tmp_env);
+#endif
 
         if (zre_global_tmpdir [strlen (zre_global_tmpdir) -1] != '/')
             strcat (zre_global_tmpdir, "/");
@@ -330,12 +337,18 @@ agent::agent(zctx_t *agentContext, void *agentPipe)
 agent::~agent ()
 {
     fmq_dir_t *inbox = fmq_dir_new (fmq_inbox, NULL);
-    fmq_dir_remove (inbox, true);
-    fmq_dir_destroy (&inbox);
+	if (inbox != nullptr)
+    {
+		fmq_dir_remove (inbox, true);
+		fmq_dir_destroy (&inbox);
+	}
 
     fmq_dir_t *outbox = fmq_dir_new (fmq_outbox, NULL);
-    fmq_dir_remove (outbox, true);
-    fmq_dir_destroy (&outbox);
+	if (outbox != nullptr)
+    {
+		fmq_dir_remove (outbox, true);
+		fmq_dir_destroy (&outbox);
+	}
 
     zhash_destroy (&peers);
     zhash_destroy (&peer_groups);
@@ -593,7 +606,6 @@ agent::recv_from_peer ()
     }
     if (!zre_peer_check_message (peer, msg)) {
         zclock_log ("W: [%s] lost messages from %s", identity, identity);
-        assert (false);
     }
 
     //  Now process each command
