@@ -117,9 +117,7 @@ zre_udp::zre_udp (int port_nbr)
     s_get_interface (myData);
     
     //  Now get printable address as host name
-    if (myData->host)
-        free (myData->host);
-    myData->host = (char*)zmalloc (INET_ADDRSTRLEN);
+    myData->host = new char[INET_ADDRSTRLEN];
     getnameinfo ((struct sockaddr *) &myData->address, sizeof (myData->address),
                  myData->host, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 }
@@ -130,9 +128,14 @@ zre_udp::zre_udp (int port_nbr)
 
 zre_udp::~zre_udp ()
 {
-    _close (myData->handle);
-    free (myData->host);
-    free (myData->from);
+#ifndef __WINDOWS__
+	_close (myData->handle);
+#else
+	closesocket(myData->handle);
+#endif
+	myData->handle = ZRE_INVALID_SOCKET;
+    delete[] myData->host;
+    delete[] myData->from;
     delete myData;
 }
 
@@ -175,9 +178,7 @@ zre_udp::recv (byte *buffer, size_t length)
         s_handle_io_error ("recvfrom");
 
     //  Store sender address as printable string
-    if (myData->from)
-        free (myData->from);
-    myData->from = (char*)zmalloc (INET_ADDRSTRLEN);
+    myData->from = new char[INET_ADDRSTRLEN];
 #if (defined (__WINDOWS__))
     getnameinfo ((struct sockaddr *) &myData->sender, si_len,
                  myData->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
