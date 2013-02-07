@@ -58,13 +58,13 @@ static void
 static bool
     s_wireless_nic (const char* name);
 static void
-    s_get_interface (zre_udp_t *self);
+    s_get_interface (zre_udp_data_t *self);
 
 
 //  -----------------------------------------------------------------
 //  UDP instance
 
-struct _zre_udp_t {
+struct zre_udp_data_t {
     int handle;                 //  Socket for send/recv
     int port_nbr;               //  UDP port number we work on
     struct sockaddr_in address;     //  Own address
@@ -77,31 +77,30 @@ struct _zre_udp_t {
 //  -----------------------------------------------------------------
 //  Constructor
 
-zre_udp_t *
-zre_udp_new (int port_nbr)
+zre_udp::zre_udp (int port_nbr)
 {
-    zre_udp_t *self = (zre_udp_t *) zmalloc (sizeof (zre_udp_t));
-    self->port_nbr = port_nbr;
+    myData = new zre_udp_data_t;
+    myData->port_nbr = port_nbr;
 
     //  Create UDP socket
-    self->handle = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (self->handle == ZRE_INVALID_SOCKET)
+    myData->handle = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (myData->handle == ZRE_INVALID_SOCKET)
         s_handle_io_error ("socket");
 
     //  Ask operating system to let us do broadcasts from socket
     int on = 1;
-    if (setsockopt (self->handle, SOL_SOCKET, SO_BROADCAST,
+    if (setsockopt (myData->handle, SOL_SOCKET, SO_BROADCAST,
                    (char *) &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_BROADCAST)");
 
     //  Allow multiple processes to bind to socket; incoming
     //  messages will come to each process
-    if (setsockopt (self->handle, SOL_SOCKET, SO_REUSEADDR,
+    if (setsockopt (myData->handle, SOL_SOCKET, SO_REUSEADDR,
                    (char *) &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEADDR)");
 
 #if defined (SO_REUSEPORT)
-    if (setsockopt (self->handle, SOL_SOCKET, SO_REUSEPORT,
+    if (setsockopt (myData->handle, SOL_SOCKET, SO_REUSEPORT,
                     (char *) &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEPORT)");
 #endif
@@ -109,39 +108,32 @@ zre_udp_new (int port_nbr)
     //  killed and restarted while the program is running.
     struct sockaddr_in sockaddr = { 0 };
     sockaddr.sin_family = AF_INET;
-    sockaddr.sin_port = htons (self->port_nbr);
+    sockaddr.sin_port = htons (myData->port_nbr);
     sockaddr.sin_addr.s_addr = htonl (INADDR_ANY);
-    if (bind (self->handle, (struct sockaddr *) &sockaddr, sizeof (sockaddr)) == -1)
+    if (bind (myData->handle, (struct sockaddr *) &sockaddr, sizeof (sockaddr)) == -1)
         s_handle_io_error ("bind");
 
     //  Get the network interface (not portable)
-    s_get_interface (self);
+    s_get_interface (myData);
     
     //  Now get printable address as host name
-    if (self->host)
-        free (self->host);
-    self->host = (char*)zmalloc (INET_ADDRSTRLEN);
-    getnameinfo ((struct sockaddr *) &self->address, sizeof (self->address),
-                 self->host, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
-    return self;
+    if (myData->host)
+        free (myData->host);
+    myData->host = (char*)zmalloc (INET_ADDRSTRLEN);
+    getnameinfo ((struct sockaddr *) &myData->address, sizeof (myData->address),
+                 myData->host, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 }
 
 
 //  -----------------------------------------------------------------
 //  Destructor
 
-void
-zre_udp_destroy (zre_udp_t **self_p)
+zre_udp::~zre_udp ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_udp_t *self = *self_p;
-        close (self->handle);
-        free (self->host);
-        free (self->from);
-        free (self);
-        *self_p = NULL;
-    }
+    _close (myData->handle);
+    free (myData->host);
+    free (myData->from);
+    delete myData;
 }
 
 
@@ -149,10 +141,9 @@ zre_udp_destroy (zre_udp_t **self_p)
 //  Returns UDP socket handle
 
 int
-zre_udp_handle (zre_udp_t *self)
+zre_udp::handle ()
 {
-    assert (self);
-    return self->handle;
+    return myData->handle;
 }
 
 
@@ -160,12 +151,11 @@ zre_udp_handle (zre_udp_t *self)
 //  Send message using UDP broadcast
 
 void
-zre_udp_send (zre_udp_t *self, byte *buffer, size_t length)
+zre_udp::send (byte *buffer, size_t length)
 {
-    assert (self);
-    self->broadcast.sin_addr.s_addr = INADDR_BROADCAST;
-    ssize_t size = sendto (self->handle, (char *) buffer, length, 0,
-        (struct sockaddr *) &self->broadcast, sizeof (struct sockaddr_in));
+    myData->broadcast.sin_addr.s_addr = INADDR_BROADCAST;
+    ssize_t size = sendto (myData->handle, (char *) buffer, length, 0,
+        (struct sockaddr *) &myData->broadcast, sizeof (struct sockaddr_in));
     if (size == -1)
         s_handle_io_error ("sendto");
 }
@@ -176,25 +166,23 @@ zre_udp_send (zre_udp_t *self, byte *buffer, size_t length)
 //  Returns size of received message, or -1
 
 ssize_t
-zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
+zre_udp::recv (byte *buffer, size_t length)
 {
-    assert (self);
-    
     socklen_t si_len = sizeof (struct sockaddr_in);
-    ssize_t size = recvfrom (self->handle, (char *) buffer, length, 0,
-        (struct sockaddr *) &self->sender, &si_len);
+    ssize_t size = recvfrom (myData->handle, (char *) buffer, length, 0,
+        (struct sockaddr *) &myData->sender, &si_len);
     if (size == -1)
         s_handle_io_error ("recvfrom");
 
     //  Store sender address as printable string
-    if (self->from)
-        free (self->from);
-    self->from = (char*)zmalloc (INET_ADDRSTRLEN);
+    if (myData->from)
+        free (myData->from);
+    myData->from = (char*)zmalloc (INET_ADDRSTRLEN);
 #if (defined (__WINDOWS__))
-    getnameinfo ((struct sockaddr *) &self->sender, si_len,
-                 self->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
+    getnameinfo ((struct sockaddr *) &myData->sender, si_len,
+                 myData->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 #else
-    inet_ntop (AF_INET, &self->sender.sin_addr, self->from, si_len);
+    inet_ntop (AF_INET, &myData->sender.sin_addr, myData->from, si_len);
 #endif
     return size;
 }
@@ -204,10 +192,9 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
 //  Return our own IP address as printable string
 
 char *
-zre_udp_host (zre_udp_t *self)
+zre_udp::host ()
 {
-    assert (self);
-    return self->host;
+    return myData->host;
 }
 
 
@@ -215,10 +202,9 @@ zre_udp_host (zre_udp_t *self)
 //  Return IP address of peer that sent last message
 
 char *
-zre_udp_from (zre_udp_t *self)
+zre_udp::from ()
 {
-    assert (self);
-    return self->from;
+    return myData->from;
 }
 
 //  -----------------------------------------------------------------
@@ -294,12 +280,12 @@ s_wireless_nic (const char* name)
         result = TRUE;
 
 #endif
-    close (sock);
+    _close (sock);
     return result;
 }
 
 static void
-s_get_interface (zre_udp_t *self)
+s_get_interface (zre_udp_data_t *myData)
 {
 #if defined (__UNIX__)
 #   if defined (HAVE_GETIFADDRS) && defined (HAVE_FREEIFADDRS)
@@ -309,9 +295,9 @@ s_get_interface (zre_udp_t *self)
         while (interface) {
             //  Hopefully the last interface will be WiFi or Ethernet
             if (interface->ifa_addr->sa_family == AF_INET) {
-                self->address = *(struct sockaddr_in *) interface->ifa_addr;
-                self->broadcast = *(struct sockaddr_in *) interface->ifa_broadaddr;
-                self->broadcast.sin_port = htons (self->port_nbr);
+                myData->address = *(struct sockaddr_in *) interface->ifa_addr;
+                myData->broadcast = *(struct sockaddr_in *) interface->ifa_broadaddr;
+                myData->broadcast.sin_port = htons (myData->port_nbr);
                 if (s_wireless_nic (interface->ifa_name))
                     break;
             }
@@ -341,15 +327,15 @@ s_get_interface (zre_udp_t *self)
         s_handle_io_error ("siocgifaddr");
 
     //  Get interface broadcast address
-    memcpy (&self->address, ((struct sockaddr_in *) &ifr.ifr_addr),
+    memcpy (&myData->address, ((struct sockaddr_in *) &ifr.ifr_addr),
         sizeof (struct sockaddr_in));
     rc = ioctl (sock, SIOCGIFBRDADDR, (caddr_t) &ifr, sizeof (struct ifreq));
     if (rc == -1)
         s_handle_io_error ("siocgifbrdaddr");
 
-    memcpy (&self->broadcast, ((struct sockaddr_in *) &ifr.ifr_broadaddr),
+    memcpy (&myData->broadcast, ((struct sockaddr_in *) &ifr.ifr_broadaddr),
         sizeof (struct sockaddr_in));
-    self->broadcast.sin_port = htons (self->port_nbr);
+    myData->broadcast.sin_port = htons (myData->port_nbr);
     close (sock);
 #   endif
 
@@ -371,12 +357,12 @@ s_get_interface (zre_udp_t *self)
         PIP_ADAPTER_PREFIX pPrefix = cur_address->FirstPrefix;
 
         if (pUnicast && pPrefix) {
-            //  self->broadcast.sin_addr is replaced with 255.255.255.255 in zre_udp_send()
-            self->address = *(struct sockaddr_in *)(pUnicast->Address.lpSockaddr);
-            self->broadcast = *(struct sockaddr_in *)(pPrefix->Address.lpSockaddr);
-            self->broadcast.sin_addr.s_addr |= htonl ((1 << (32 - pPrefix->PrefixLength)) - 1);
+            //  myData->broadcast.sin_addr is replaced with 255.255.255.255 in zre_udp_send()
+            myData->address = *(struct sockaddr_in *)(pUnicast->Address.lpSockaddr);
+            myData->broadcast = *(struct sockaddr_in *)(pPrefix->Address.lpSockaddr);
+            myData->broadcast.sin_addr.s_addr |= htonl ((1 << (32 - pPrefix->PrefixLength)) - 1);
         }
-        self->broadcast.sin_port = htons (self->port_nbr);
+        myData->broadcast.sin_port = htons (myData->port_nbr);
         cur_address = cur_address->Next;
     }
     free (pip_addresses);

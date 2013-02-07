@@ -54,7 +54,8 @@ static void
 //  Constructor
 zre_node::zre_node ()
 {
-    //  If caller set a default ctx use that, else create our own
+    myData = new zre_node_data_t;
+	//  If caller set a default ctx use that, else create our own
     if (zre_global_ctx)
         myData->ctx = zre_global_ctx;
     else {
@@ -71,6 +72,7 @@ zre_node::~zre_node ()
 {
     if (myData->ctx_owned)
         zctx_destroy (&myData->ctx);
+	delete myData;
 }
 
 //  ---------------------------------------------------------------------
@@ -197,11 +199,8 @@ s_tmpdir ()
         zre_global_tmpdir = our_tmpdir;
         char *tmp_env = getenv ("TMPDIR");
         if (!tmp_env)
-#ifdef __WINDOWS__
-		{	
+#ifdef __WINDOWS__	
 			GetTempPath(255, our_tmpdir);
-			tmp_env = our_tmpdir;
-		}
 #else
             tmp_env = "/tmp";
         strcat (zre_global_tmpdir, tmp_env);
@@ -257,7 +256,7 @@ public:
 	int ping_peer (const char *key, void *item);
 
 	void* get_pipe(){return pipe;}
-	zre_udp_t* get_udp(){return udp;}
+	zre_udp* get_udp(){return udp;}
 	fmq_client_t* get_fmq_client(){return fmq_client;}
 	void* get_inbox(){return inbox;}
 	zhash_t* get_peers(){return peers;}
@@ -267,7 +266,7 @@ public:
 private:
 	zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
-    zre_udp_t *udp;             //  UDP object
+    zre_udp *udp;             //  UDP object
     zre_log_t *log;             //  Log object
     zre_uuid_t *uuid;           //  Our UUID as object
     char *identity;             //  Our UUID as hex string
@@ -297,17 +296,17 @@ agent::agent(zctx_t *agentContext, void *agentPipe)
 
     ctx = agentContext;
     pipe = agentPipe;
-    udp = zre_udp_new (ZRE_DISCOVERY_PORT);
+    udp = new zre_udp(ZRE_DISCOVERY_PORT);
     inbox = agentInbox;
-    host = zre_udp_host (udp);
+	host = udp->host();
     port = zsocket_bind (inbox, "tcp://*:*");
     sprintf (endpoint, "%s:%d", host, port);
     if (port < 0) {       //  Interrupted
-        zre_udp_destroy (&udp);
+        delete udp;
         return;
     }
     uuid = zre_uuid_new ();
-    identity = strdup (zre_uuid_str (uuid));
+    identity = _strdup (zre_uuid_str (uuid));
     peers = zhash_new ();
     peer_groups = zhash_new ();
     own_groups = zhash_new ();
@@ -359,7 +358,7 @@ agent::~agent ()
     zhash_destroy (&peer_groups);
     zhash_destroy (&own_groups);
     zhash_destroy (&headers);
-    zre_udp_destroy (&udp);
+    delete udp;
     zre_log_destroy (&log);
         
     fmq_server_destroy (&fmq_server);
@@ -525,7 +524,7 @@ agent::s_require_peer (char *identity, char *address, uint16_t port)
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-        zre_msg_ipaddress_set (msg, zre_udp_host (udp));
+        zre_msg_ipaddress_set (msg, udp->host());
         zre_msg_mailbox_set (msg, port);
         zre_msg_groups_set (msg, zhash_keys (own_groups));
         zre_msg_status_set (msg, status);
@@ -695,7 +694,7 @@ agent::beacon_send ()
     zre_uuid_cpy (uuid, beacon.uuid);
     
     //  Broadcast the beacon to anyone who is listening
-    zre_udp_send (udp, (byte *) &beacon, sizeof (beacon_t));
+    udp->send((byte *) &beacon, sizeof (beacon_t));
 }
 
 
@@ -706,7 +705,7 @@ agent::recv_udp_beacon ()
 {
     //  Get beacon frame from network
     beacon_t beacon;
-    ssize_t size = zre_udp_recv (udp, (byte *) &beacon, sizeof (beacon_t));
+    ssize_t size = udp->recv((byte *) &beacon, sizeof (beacon_t));
 
     //  Basic validation on the frame
     if (size != sizeof (beacon_t)
@@ -721,7 +720,7 @@ agent::recv_udp_beacon ()
         zre_uuid_t *uuid = zre_uuid_new ();
         zre_uuid_set (uuid, beacon.uuid);
         zre_peer *peer = s_require_peer (
-            zre_uuid_str (uuid), zre_udp_from (udp), ntohs (beacon.port));
+            zre_uuid_str (uuid), udp->from(), ntohs (beacon.port));
 		peer->refresh();
         zre_uuid_destroy (&uuid);
     }
@@ -799,7 +798,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
     zmq_pollitem_t pollitems [] = {
         { self->get_pipe(),                           0, ZMQ_POLLIN, 0 },
         { self->get_inbox(),                          0, ZMQ_POLLIN, 0 },
-        { 0,           zre_udp_handle (self->get_udp()), ZMQ_POLLIN, 0 },
+        { 0,           self->get_udp()->handle(), ZMQ_POLLIN, 0 },
         { fmq_client_handle (self->get_fmq_client()), 0, ZMQ_POLLIN, 0 }
     };
     while (!zctx_interrupted) {

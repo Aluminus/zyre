@@ -33,34 +33,41 @@
 #define ZRE_INVALID_SOCKET -1
 #endif
 
-typedef struct _zre_udp_t zre_udp_t;
+struct zre_udp_data_t;
+
+class zre_udp
+{
+public:
 
 //  Constructor
-zre_udp_t *
-    zre_udp_new (int port_nbr);
+    zre_udp (int port_nbr);
 
 //  Destructor
-void
-    zre_udp_destroy (zre_udp_t **self_p);
+    ~zre_udp ();
 
 //  Returns UDP socket handle
 int
-    zre_udp_handle (zre_udp_t *self);
+    handle ();
 
 //  Send message using UDP broadcast
 void
-    zre_udp_send (zre_udp_t *self, byte *buffer, size_t length);
+    send (byte *buffer, size_t length);
 
 //  Receive message from UDP broadcast
 ssize_t
-    zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length);
+    recv (byte *buffer, size_t length);
 
 //  Return our own IP address as printable string
 char *
-    zre_udp_host (zre_udp_t *self);
+    host ();
 
 //  Return IP address of peer that sent last message
 char *
-    zre_udp_from (zre_udp_t *self);
+    from ();
+
+private:
+	zre_udp_data_t* myData;
    
+};
+
 #endif
