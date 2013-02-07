@@ -36,6 +36,8 @@ CZMQ_EXPORT extern zctx_t *zre_global_ctx;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT extern char *zre_global_tmpdir;
 
+struct zre_node_data_t;	// Opaque node data type
+
 class zre_node
 {
 public:
@@ -88,9 +90,7 @@ CZMQ_EXPORT void
     retract (char *logical);
 
 private:
-	zctx_t *ctx;                //  Our context wrapper
-    bool ctx_owned;             //  True if we created the context
-    void *pipe;                 //  Pipe through to agent
+	zre_node_data_t* myData;
 };
 
 #endif

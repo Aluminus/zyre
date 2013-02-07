@@ -32,6 +32,7 @@
 #else
 #define ZRE_INVALID_SOCKET -1
 #endif
+
 typedef struct _zre_udp_t zre_udp_t;
 
 //  Constructor

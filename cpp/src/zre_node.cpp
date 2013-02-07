@@ -36,6 +36,11 @@ CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
+struct zre_node_data_t {
+    zctx_t *ctx;                //  Our context wrapper
+    bool ctx_owned;             //  True if we created the context
+    void *pipe;                 //  Pipe through to agent
+};
 
 //  =====================================================================
 //  Synchronous part, works in our application thread
@@ -51,12 +56,12 @@ zre_node::zre_node ()
 {
     //  If caller set a default ctx use that, else create our own
     if (zre_global_ctx)
-        ctx = zre_global_ctx;
+        myData->ctx = zre_global_ctx;
     else {
-        ctx = zctx_new ();
-        ctx_owned = true;
+        myData->ctx = zctx_new ();
+        myData->ctx_owned = true;
     }
-    pipe = zthread_fork (ctx, zre_node_agent, NULL);
+    myData->pipe = zthread_fork (myData->ctx, zre_node_agent, nullptr);
 }
 
 
@@ -64,8 +69,8 @@ zre_node::zre_node ()
 //  Destructor
 zre_node::~zre_node ()
 {
-    if (ctx_owned)
-        zctx_destroy (&ctx);
+    if (myData->ctx_owned)
+        zctx_destroy (&myData->ctx);
 }
 
 //  ---------------------------------------------------------------------
@@ -75,7 +80,7 @@ zre_node::~zre_node ()
 zmsg_t *
 zre_node::recv ()
 {
-    zmsg_t *msg = zmsg_recv (pipe);
+    zmsg_t *msg = zmsg_recv (myData->pipe);
     return msg;
 }
 
@@ -86,8 +91,8 @@ zre_node::recv ()
 int
 zre_node::join (const char *group)
 {
-    zstr_sendm (pipe, "JOIN");
-    zstr_send  (pipe, group);
+    zstr_sendm (myData->pipe, "JOIN");
+    zstr_send  (myData->pipe, group);
     return 0;
 }
 
@@ -98,8 +103,8 @@ zre_node::join (const char *group)
 int
 zre_node::leave (const char *group)
 {
-    zstr_sendm (pipe, "LEAVE");
-    zstr_send  (pipe, group);
+    zstr_sendm (myData->pipe, "LEAVE");
+    zstr_send  (myData->pipe, group);
     return 0;
 }
 
@@ -111,8 +116,8 @@ zre_node::leave (const char *group)
 int
 zre_node::whisper (zmsg_t **msg_p)
 {
-    zstr_sendm (pipe, "WHISPER");
-    zmsg_send (msg_p, pipe);
+    zstr_sendm (myData->pipe, "WHISPER");
+    zmsg_send (msg_p, myData->pipe);
     return 0;
 }
 
@@ -123,8 +128,8 @@ zre_node::whisper (zmsg_t **msg_p)
 int
 zre_node::shout (zmsg_t **msg_p)
 {
-    zstr_sendm (pipe, "SHOUT");
-    zmsg_send (msg_p, pipe);
+    zstr_sendm (myData->pipe, "SHOUT");
+    zmsg_send (msg_p, myData->pipe);
     return 0;
 }
 
@@ -135,7 +140,7 @@ zre_node::shout (zmsg_t **msg_p)
 void *
 zre_node::handle () const
 {    
-    return pipe;
+    return myData->pipe;
 }
 
 
@@ -151,9 +156,9 @@ zre_node::header_set (char *name, char *format, ...)
     vsnprintf (value, 255, format, argptr);
     va_end (argptr);
     
-    zstr_sendm (pipe, "SET");
-    zstr_sendm (pipe, name);
-    zstr_send  (pipe, value);
+    zstr_sendm (myData->pipe, "SET");
+    zstr_sendm (myData->pipe, name);
+    zstr_send  (myData->pipe, value);
     free (value);
 }
 
@@ -165,9 +170,9 @@ zre_node::header_set (char *name, char *format, ...)
 void
 zre_node::publish (char *logical, char *physical)
 {
-    zstr_sendm (pipe, "PUBLISH");
-    zstr_sendm (pipe, logical);
-    zstr_send  (pipe, physical);
+    zstr_sendm (myData->pipe, "PUBLISH");
+    zstr_sendm (myData->pipe, logical);
+    zstr_send  (myData->pipe, physical);
 }
 
 //  ---------------------------------------------------------------------
@@ -176,8 +181,8 @@ zre_node::publish (char *logical, char *physical)
 void
 zre_node::retract (char *logical)
 {
-    zstr_sendm (pipe, "RETRACT");
-    zstr_send  (pipe, logical);
+    zstr_sendm (myData->pipe, "RETRACT");
+    zstr_send  (myData->pipe, logical);
 }
 
 
