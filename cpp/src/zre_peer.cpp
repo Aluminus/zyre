@@ -72,7 +72,7 @@ zre_peer::zre_peer (char *identity, zhash_t *container, zctx_t *ctx)
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, identity, myData);
+        zhash_insert (container, identity, this);
         zhash_freefn (container, identity, s_delete_peer);
     }
 }

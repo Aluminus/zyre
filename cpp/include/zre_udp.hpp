@@ -27,6 +27,11 @@
 #ifndef __ZRE_UDP_H_INCLUDED__
 #define __ZRE_UDP_H_INCLUDED__
 
+#ifdef __WINDOWS__
+#define ZRE_INVALID_SOCKET INVALID_SOCKET
+#else
+#define ZRE_INVALID_SOCKET -1
+#endif
 typedef struct _zre_udp_t zre_udp_t;
 
 //  Constructor

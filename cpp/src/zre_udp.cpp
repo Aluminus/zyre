@@ -85,7 +85,7 @@ zre_udp_new (int port_nbr)
 
     //  Create UDP socket
     self->handle = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (self->handle == -1)
+    if (self->handle == ZRE_INVALID_SOCKET)
         s_handle_io_error ("socket");
 
     //  Ask operating system to let us do broadcasts from socket

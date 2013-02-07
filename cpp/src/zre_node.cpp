@@ -32,7 +32,7 @@ CZMQ_EXPORT zctx_t *zre_global_ctx = nullptr;
 //  Optional temp directory; set by caller if needed
 CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
 // TODO: Remove when linker problems are fixed
-CZMQ_EXPORT volatile int zctx_interrupted = 0; 
+//CZMQ_EXPORT volatile int zctx_interrupted = 0; 
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
