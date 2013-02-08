@@ -31,7 +31,7 @@
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_group_t {
+struct zre_group_data_t {
     char *name;                 //  Group name
     zhash_t *peers;             //  Peers in group
 };
@@ -42,44 +42,36 @@ struct _zre_group_t {
 static void
 s_delete_group (void *argument)
 {
-    zre_group_t *group = (zre_group_t *) argument;
-    zre_group_destroy (&group);
+    zre_group *group = (zre_group *) argument;
+    delete group;
 }
 
 
 //  ---------------------------------------------------------------------
 //  Construct new group object
 
-zre_group_t *
-zre_group_new (char *name, zhash_t *container)
+zre_group::zre_group (char *name, zhash_t *container)
 {
-    zre_group_t *self = (zre_group_t *) zmalloc (sizeof (zre_group_t));
-    self->name = strdup (name);
-    self->peers = zhash_new ();
+    zre_group_data_t *myData = new zre_group_data_t;
+    myData->name = strdup (name);
+    myData->peers = zhash_new ();
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, name, self);
+        zhash_insert (container, name, myData);
         zhash_freefn (container, name, s_delete_group);
     }
-    return self;
 }
 
 
 //  ---------------------------------------------------------------------
 //  Destroy group object
 
-void
-zre_group_destroy (zre_group_t **self_p)
+zre_group::~zre_group ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_group_t *self = *self_p;
-        zhash_destroy (&self->peers);
-        free (self->name);
-        free (self);
-        *self_p = NULL;
-    }
+    zhash_destroy (&myData->peers);
+    delete[] myData->name;
+    delete myData;
 }
 
 
@@ -88,11 +80,10 @@ zre_group_destroy (zre_group_t **self_p)
 //  Ignore duplicate joins
 
 void
-zre_group_join (zre_group_t *self, zre_peer *peer)
+zre_group::join (zre_peer *peer)
 {
-    assert (self);
     assert (peer);
-    zhash_insert (self->peers, peer->identity(), peer);
+    zhash_insert (myData->peers, peer->identity(), peer);
     peer->status_set(peer->status() + 1);
 }
 
@@ -101,11 +92,10 @@ zre_group_join (zre_group_t *self, zre_peer *peer)
 //  Remove peer from group
 
 void
-zre_group_leave (zre_group_t *self, zre_peer *peer)
+zre_group::leave (zre_peer *peer)
 {
-    assert (self);
     assert (peer);
-	zhash_delete (self->peers, peer->identity());
+	zhash_delete (myData->peers, peer->identity());
 	peer->status_set(peer->status() + 1);
 }
 
@@ -123,9 +113,8 @@ s_peer_send (const char *key, void *item, void *argument)
 //  Send message to all peers in group
 
 void
-zre_group_send (zre_group_t *self, zre_msg_t **msg_p)
+zre_group::send (zre_msg_t **msg_p)
 {
-    assert (self);
-    zhash_foreach (self->peers, s_peer_send, *msg_p);
+    zhash_foreach (myData->peers, s_peer_send, *msg_p);
     zre_msg_destroy (msg_p);
 }

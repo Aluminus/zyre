@@ -27,26 +27,32 @@
 #ifndef __ZRE_GROUP_H_INCLUDED__
 #define __ZRE_GROUP_H_INCLUDED__
 
-typedef struct _zre_group_t zre_group_t;
+struct zre_group_data_t;
+
+class zre_group
+{
+public:
 
 //  Constructor
-zre_group_t *
-    zre_group_new (char *name, zhash_t *container);
+    zre_group (char *name, zhash_t *container);
 
 //  Destructor
-void
-    zre_group_destroy (zre_group_t **self_p);
+    ~zre_group ();
 
 //  Add peer to group
 void
-    zre_group_join (zre_group_t *self, zre_peer *peer);
+    join (zre_peer *peer);
 
 //  Remove peer from group
 void
-    zre_group_leave (zre_group_t *self, zre_peer *peer);
+    leave (zre_peer *peer);
 
 //  Send message to all peers in group
 void
-    zre_group_send (zre_group_t *self, zre_msg_t **msg_p);
+    send (zre_msg_t **msg_p);
+
+private:
+	zre_group_data_t* myData;
+};
 
 #endif

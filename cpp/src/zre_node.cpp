@@ -244,9 +244,9 @@ public:
 
 	int recv_from_api();
 	zre_peer* s_require_peer (char *identity, char *address, uint16_t port);
-	zre_group_t* s_require_peer_group (char *name);
-	zre_group_t* s_join_peer_group (zre_peer *peer, char *name);
-	zre_group_t* s_leave_peer_group (zre_peer *peer, char *name);
+	zre_group* s_require_peer_group (char *name);
+	zre_group* s_join_peer_group (zre_peer *peer, char *name);
+	zre_group* s_leave_peer_group (zre_peer *peer, char *name);
 	int recv_from_peer ();
 	void beacon_send ();
 	int recv_udp_beacon ();
@@ -406,22 +406,22 @@ agent::recv_from_api ()
     if (streq (command, "SHOUT")) {
         //  Get group to send message to
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (peer_groups, name);
+        zre_group *group = (zre_group *) zhash_lookup (peer_groups, name);
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
             zre_msg_group_set (msg, name);
             zre_msg_content_set (msg, zmsg_pop (request));
-            zre_group_send (group, &msg);
+            group->send(&msg);
         }
         free (name);
     }
     else
     if (streq (command, "JOIN")) {
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (own_groups, name);
+        zre_group *group = (zre_group *) zhash_lookup (own_groups, name);
         if (!group) {
             //  Only send if we're not already in group
-            group = zre_group_new (name, own_groups);
+            group = new zre_group (name, own_groups);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
             zre_msg_group_set (msg, name);
             //  Update status before sending command
@@ -435,7 +435,7 @@ agent::recv_from_api ()
     else
     if (streq (command, "LEAVE")) {
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (own_groups, name);
+        zre_group *group = (zre_group *) zhash_lookup (own_groups, name);
         if (group) {
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
@@ -542,20 +542,20 @@ agent::s_require_peer (char *identity, char *address, uint16_t port)
 
 //  Find or create group via its name
 
-zre_group_t *
+zre_group *
 agent::s_require_peer_group (char *name)
 {
-    zre_group_t *group = (zre_group_t *) zhash_lookup (peer_groups, name);
+    zre_group *group = (zre_group *) zhash_lookup (peer_groups, name);
     if (!group)
-        group = zre_group_new (name, peer_groups);
+        group = new zre_group (name, peer_groups);
     return group;
 }
 
-zre_group_t *
+zre_group *
 agent::s_join_peer_group (zre_peer *peer, char *name)
 {
-    zre_group_t *group = s_require_peer_group (name);
-    zre_group_join (group, peer);
+    zre_group *group = s_require_peer_group (name);
+	group->join(peer);
 
     //  Now tell the caller about the peer joined group
     zstr_sendm (pipe, "JOIN");
@@ -565,11 +565,11 @@ agent::s_join_peer_group (zre_peer *peer, char *name)
     return group;
 }
 
-zre_group_t *
+zre_group *
 agent::s_leave_peer_group (zre_peer *peer, char *name)
 {
-    zre_group_t *group = s_require_peer_group (name);
-    zre_group_leave (group, peer);
+    zre_group *group = s_require_peer_group (name);
+	group->leave(peer);
 
     //  Now tell the caller about the peer left group
     zstr_sendm (pipe, "LEAVE");
@@ -744,9 +744,9 @@ agent::recv_fmq_event ()
 static int
 agent_peer_delete (const char *key, void *item, void *argument)
 {
-    zre_group_t *group = (zre_group_t *) item;
+    zre_group *group = (zre_group *) item;
     zre_peer *peer = (zre_peer *) argument;
-    zre_group_leave (group, peer);
+	group->leave(peer);
     return 0;
 }
 
