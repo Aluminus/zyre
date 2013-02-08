@@ -799,7 +799,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
         { 0,           self->get_udp()->handle(), ZMQ_POLLIN, 0 },
         { fmq_client_handle (self->get_fmq_client()), 0, ZMQ_POLLIN, 0 }
     };
-    while (!zctx_interrupted) {
+    while (!zctx_interrupted()) {
         long timeout = (long) (ping_at - zclock_time ());
         assert (timeout <= PING_INTERVAL);
         if (timeout < 0)
