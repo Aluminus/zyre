@@ -28,6 +28,7 @@
 #define __ZRE_LOG_MSG_H_INCLUDED__
 
 #include <cstdint>
+#include "platform.hpp"
 
 /*  These are the zre_log_msg messages
     LOG - Log an event
@@ -138,7 +139,7 @@ void
     zre_log_msg_data_set (zre_log_msg_t *self, char *format, ...);
 
 //  Self test of this class
-int
+ZRE_EXPORT int
     zre_log_msg_test (bool verbose);
     
 #endif

@@ -60,7 +60,7 @@ bool
     zre_uuid_neq (zre_uuid_t *self, byte *compare);
 
 //  Self test of this class
-int
+ZRE_EXPORT int
     zre_uuid_test (bool verbose);
 
 #endif

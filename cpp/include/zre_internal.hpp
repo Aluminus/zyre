@@ -31,18 +31,6 @@
 #define assert(expr) _ASSERTE(expr)
 #endif
 
-//- DLL exports -------------------------------------------------------------
-
-#if (defined (__WINDOWS__))
-#   if defined ZRE_DLL_EXPORT
-#       define ZRE_EXPORT __declspec(dllexport)
-#   else
-#       define ZRE_EXPORT __declspec(dllimport)
-#   endif
-#else
-#   define ZRE_EXPORT
-#endif
-
 #include "zre.hpp"
 
 //  Constants, to be configured/reviewed

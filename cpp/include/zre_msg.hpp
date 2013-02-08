@@ -28,6 +28,7 @@
 #define __ZRE_MSG_H_INCLUDED__
 
 #include <cstdint>
+#include "platform.hpp"
 
 /*  These are the zre_msg messages
     HELLO - Greet a peer so it can connect back to us
@@ -225,7 +226,7 @@ void
     zre_msg_group_set (zre_msg_t *self, char *format, ...);
 
 //  Self test of this class
-int
+ZRE_EXPORT int
     zre_msg_test (bool verbose);
   
 

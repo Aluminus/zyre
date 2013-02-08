@@ -36,6 +36,8 @@
 #define ZRE_VERSION \
     ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
 
+#include "platform.hpp"
+
 #include <czmq.h>
 #if CZMQ_VERSION < 10304
 #   error "Zyre needs CZMQ/1.3.4 or later"
