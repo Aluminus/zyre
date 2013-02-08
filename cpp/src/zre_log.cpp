@@ -31,7 +31,7 @@
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_log_t {
+struct zre_log_data_t {
     zctx_t *ctx;                //  CZMQ context
     void *publisher;            //  Socket to send to
     uint16_t nodeid;            //  Own correlation ID
@@ -41,33 +41,24 @@ struct _zre_log_t {
 //  ---------------------------------------------------------------------
 //  Construct new log object
 
-zre_log_t *
-zre_log_new (char *endpoint)
+zre_log::zre_log (char *endpoint)
 {
-    zre_log_t *self = (zre_log_t *) zmalloc (sizeof (zre_log_t));
-    self->ctx = zctx_new ();
-    self->publisher = zsocket_new (self->ctx, ZMQ_PUB);
+    myData = new zre_log_data_t;
+    myData->ctx = zctx_new ();
+    myData->publisher = zsocket_new (myData->ctx, ZMQ_PUB);
     //  Modified Bernstein hashing function
     while (*endpoint)
-        self->nodeid = 33 * self->nodeid ^ *endpoint++;
-    
-    return self;
+        myData->nodeid = 33 * myData->nodeid ^ *endpoint++;
 }
 
 
 //  ---------------------------------------------------------------------
 //  Destroy log object
 
-void
-zre_log_destroy (zre_log_t **self_p)
+zre_log::~zre_log ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_log_t *self = *self_p;
-        zctx_destroy (&self->ctx);
-        free (self);
-        *self_p = NULL;
-    }
+    zctx_destroy (&myData->ctx);
+    delete myData;
 }
 
 
@@ -75,10 +66,9 @@ zre_log_destroy (zre_log_t **self_p)
 //  Connect log to remote endpoint
 
 void
-zre_log_connect (zre_log_t *self, char *endpoint)
+zre_log::connect (char *endpoint)
 {
-    assert (self);
-    zsocket_connect (self->publisher, endpoint);
+    zsocket_connect (myData->publisher, endpoint);
 }
 
 
@@ -86,7 +76,7 @@ zre_log_connect (zre_log_t *self, char *endpoint)
 //  Record one log event
 
 void
-zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
+zre_log::info (int event, char *peer, char *format, ...)
 {
     uint16_t peerid = 0;
     while (peer && *peer)
@@ -95,7 +85,6 @@ zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
     //  Format body if any
     char body [256];
     if (format) {
-        assert (self);
         va_list argptr;
         va_start (argptr, format);
         vsnprintf (body, 255, format, argptr);
@@ -104,6 +93,6 @@ zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
     else
         *body = 0;
     
-    zre_log_msg_send_log (self->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
-        event, self->nodeid, peerid, time (NULL), body);
+    zre_log_msg_send_log (myData->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
+        event, myData->nodeid, peerid, time (NULL), body);
 }

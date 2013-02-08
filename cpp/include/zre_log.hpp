@@ -27,22 +27,28 @@
 #ifndef __ZRE_LOG_H_INCLUDED__
 #define __ZRE_LOG_H_INCLUDED__
 
-typedef struct _zre_log_t zre_log_t;
+struct zre_log_data_t;
+
+class zre_log
+{
+public:
 
 //  Constructor
-zre_log_t *
-    zre_log_new (char *endpoint);
+    zre_log (char *endpoint);
 
 //  Destructor
-void
-    zre_log_destroy (zre_log_t **self_p);
+    ~zre_log ();
 
 //  Connect log to remote endpoint
 void
-    zre_log_connect (zre_log_t *self, char *endpoint);
+    connect (char *endpoint);
 
 //  Record one log event
 void
-    zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...);
+    info (int event, char *peer, char *format, ...);
+
+private:
+	zre_log_data_t* myData;
+};
 
 #endif

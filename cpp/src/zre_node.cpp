@@ -28,9 +28,9 @@
 #include "../include/zre_internal.hpp"
 
 //  Optional global context for zre_node instances
-CZMQ_EXPORT zctx_t *zre_global_ctx = nullptr;
+ZRE_EXPORT zctx_t *zre_global_ctx = nullptr;
 //  Optional temp directory; set by caller if needed
-CZMQ_EXPORT char *zre_global_tmpdir = nullptr;
+ZRE_EXPORT char *zre_global_tmpdir = nullptr;
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -259,13 +259,13 @@ public:
 	void* get_inbox(){return inbox;}
 	zhash_t* get_peers(){return peers;}
 	zhash_t* get_peer_groups(){return peer_groups;}
-	zre_log_t* get_log(){return log;}
+	zre_log* get_log(){return log;}
 
 private:
 	zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
     zre_udp *udp;             //  UDP object
-    zre_log_t *log;             //  Log object
+    zre_log *log;             //  Log object
     zre_uuid_t *uuid;           //  Our UUID as object
     char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
@@ -310,7 +310,7 @@ agent::agent(zctx_t *agentContext, void *agentPipe)
     own_groups = zhash_new ();
     headers = zhash_new ();
     zhash_autofree (headers);
-    log = zre_log_new (endpoint);
+    log = new zre_log (endpoint);
 
     //  Set up content distribution network: Each server binds to an
     //  ephemeral port and publishes a temporary directory that acts
@@ -338,14 +338,14 @@ agent::agent(zctx_t *agentContext, void *agentPipe)
 
 agent::~agent ()
 {
-    fmq_dir_t *inbox = fmq_dir_new (fmq_inbox, NULL);
+    fmq_dir_t *inbox = fmq_dir_new (fmq_inbox, nullptr);
 	if (inbox != nullptr)
     {
 		fmq_dir_remove (inbox, true);
 		fmq_dir_destroy (&inbox);
 	}
 
-    fmq_dir_t *outbox = fmq_dir_new (fmq_outbox, NULL);
+    fmq_dir_t *outbox = fmq_dir_new (fmq_outbox, nullptr);
 	if (outbox != nullptr)
     {
 		fmq_dir_remove (outbox, true);
@@ -357,7 +357,7 @@ agent::~agent ()
     zhash_destroy (&own_groups);
     zhash_destroy (&headers);
     delete udp;
-    zre_log_destroy (&log);
+    delete log;
         
     fmq_server_destroy (&fmq_server);
     fmq_client_destroy (&fmq_client);
@@ -428,7 +428,7 @@ agent::recv_from_api ()
             zre_msg_status_set (msg, ++(status));
             zhash_foreach (peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
-            zre_log_info (log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
+			log->info(ZRE_LOG_MSG_EVENT_JOIN, nullptr, name);
         }
         free (name);
     }
@@ -445,7 +445,7 @@ agent::recv_from_api ()
             zhash_foreach (peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
             zhash_delete (own_groups, name);
-            zre_log_info (log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
+			log->info(ZRE_LOG_MSG_EVENT_LEAVE, nullptr, name);
         }
         free (name);
     }
@@ -529,7 +529,7 @@ agent::s_require_peer (char *identity, char *address, uint16_t port)
         zre_msg_headers_set (msg, zhash_dup (headers));
 		peer->send(&msg);
         
-        zre_log_info (log, ZRE_LOG_MSG_EVENT_ENTER,
+		log->info(ZRE_LOG_MSG_EVENT_ENTER,
 			peer->endpoint(), endpoint);
 
         //  Now tell the caller about the peer
@@ -601,7 +601,7 @@ agent::recv_from_peer ()
         peer->ready_set(true);
     }
     //  Ignore command if peer isn't ready
-	if (peer == NULL || !peer->ready()) {
+	if (peer == nullptr || !peer->ready()) {
 				free(identity);
         zre_msg_destroy (&msg);
         return 0;
@@ -625,12 +625,12 @@ agent::recv_from_peer ()
         peer->headers_set(zre_msg_headers (msg));
 
         //  If peer is a ZRE/LOG collector, connect to it
-        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
+        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", nullptr);
         if (collector)
-            zre_log_connect (log, collector);
+			log->connect(collector);
         
         //  If peer is a FileMQ publisher, connect to it
-        char *publisher = zre_msg_headers_string (msg, "X-FILEMQ", NULL);
+        char *publisher = zre_msg_headers_string (msg, "X-FILEMQ", nullptr);
         if (publisher)
             fmq_client_connect (fmq_client, publisher);
     }
@@ -760,7 +760,7 @@ agent::ping_peer (const char *key, void *item)
     zre_peer *peer = (zre_peer *) item;
 	char *identity = peer->identity();
 	if (zclock_time () >= peer->expired_at()) {
-        zre_log_info (get_log(), ZRE_LOG_MSG_EVENT_EXIT,
+		get_log()->info(ZRE_LOG_MSG_EVENT_EXIT,
 			peer->endpoint(),
 			peer->endpoint());
         //  If peer has really vanished, expire it
