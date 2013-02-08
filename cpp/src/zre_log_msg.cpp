@@ -188,7 +188,7 @@ zre_log_msg_destroy (zre_log_msg_t **self_p)
 
         //  Free object itself
         free (self);
-        *self_p = NULL;
+        *self_p = nullptr;
     }
 }
 
@@ -202,7 +202,7 @@ zre_log_msg_recv (void *input)
 {
     assert (input);
     zre_log_msg_t *self = zre_log_msg_new (0);
-    zframe_t *frame = NULL;
+    zframe_t *frame = nullptr;
     size_t string_size;
     size_t list_size;
     size_t hash_size;
@@ -266,7 +266,7 @@ zre_log_msg_recv (void *input)
     empty:
         zframe_destroy (&frame);
         zre_log_msg_destroy (&self);
-        return (NULL);
+        return nullptr;
 }
 
 
@@ -308,7 +308,7 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
             assert (false);
     }
     //  Now serialize message into the frame
-    zframe_t *frame = zframe_new (NULL, frame_size);
+    zframe_t *frame = zframe_new (nullptr, frame_size);
     self->needle = zframe_data (frame);
     size_t string_size;
     int frame_flags = 0;

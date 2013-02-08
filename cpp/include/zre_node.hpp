@@ -31,10 +31,10 @@
 
 //  Optional global context for zre_node instances
 //  Used for large-scale testing simulation only
-CZMQ_EXPORT extern zctx_t *zre_global_ctx;
+ZRE_EXPORT extern zctx_t *zre_global_ctx;
 
 //  Optional temp directory; set by caller if needed
-CZMQ_EXPORT extern char *zre_global_tmpdir;
+ZRE_EXPORT extern char *zre_global_tmpdir;
 
 struct zre_node_data_t;	// Opaque node data type
 
@@ -43,50 +43,50 @@ class zre_node
 public:
 
 //  Constructor
-CZMQ_EXPORT zre_node ();
+ZRE_EXPORT zre_node ();
 
 //  Destructor
-CZMQ_EXPORT ~zre_node ();
+ZRE_EXPORT ~zre_node ();
 
 //  Set node tracing on or off
-CZMQ_EXPORT void
+ZRE_EXPORT void
     verbose_set (bool verbose);
 
 //  Join a group
-CZMQ_EXPORT int
+ZRE_EXPORT int
     join (const char *group);
     
 //  Leave a group
-CZMQ_EXPORT int
+ZRE_EXPORT int
     leave (const char *group);
 
 //  Receive next message from node
-CZMQ_EXPORT zmsg_t *
+ZRE_EXPORT zmsg_t *
     recv ();
 
 //  Send message to single peer; peer ID is first frame in message
-CZMQ_EXPORT int
+ZRE_EXPORT int
     whisper (zmsg_t **msg_p);
     
 //  Send message to a group of peers
-CZMQ_EXPORT int
+ZRE_EXPORT int
     shout (zmsg_t **msg_p);
     
 //  Return node handle, for polling
-CZMQ_EXPORT void *
+ZRE_EXPORT void *
     handle () const;
 
 //  Set node header value
-CZMQ_EXPORT void
+ZRE_EXPORT void
     header_set (char *name, char *format, ...);
 
 //  Publish file under some logical name
 //  Physical name is the actual file location
-CZMQ_EXPORT void
+ZRE_EXPORT void
     publish (char *logical, char *physical);
 
 //  Retract published file 
-CZMQ_EXPORT void
+ZRE_EXPORT void
     retract (char *logical);
 
 private:

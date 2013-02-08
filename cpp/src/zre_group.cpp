@@ -52,7 +52,7 @@ s_delete_group (void *argument)
 
 zre_group::zre_group (char *name, zhash_t *container)
 {
-    zre_group_data_t *myData = new zre_group_data_t;
+    myData = new zre_group_data_t;
     myData->name = strdup (name);
     myData->peers = zhash_new ();
     
