@@ -93,6 +93,6 @@ zre_log::info (int event, char *peer, char *format, ...)
     else
         *body = 0;
     
-    zre_log_msg_send_log (myData->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
+    zre_log_msg::send_log (myData->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
         event, myData->nodeid, peerid, time (NULL), body);
 }

@@ -28,6 +28,7 @@
 #define __ZRE_LOG_MSG_H_INCLUDED__
 
 #include <cstdint>
+#include <memory>
 #include "platform.hpp"
 
 /*  These are the zre_log_msg messages
@@ -52,27 +53,29 @@
 #define ZRE_LOG_MSG_LOG                     1
 
 //  Opaque class structure
-typedef struct _zre_log_msg_t zre_log_msg_t;
+struct zre_log_msg_data_t;
+
+class zre_log_msg
+{
+public:
 
 //  Create a new zre_log_msg
-zre_log_msg_t *
-    zre_log_msg_new (int id);
+    zre_log_msg (int id);
 
 //  Destroy the zre_log_msg
-void
-    zre_log_msg_destroy (zre_log_msg_t **self_p);
+    ~zre_log_msg ();
 
 //  Receive and parse a zre_log_msg from the input
-zre_log_msg_t *
-    zre_log_msg_recv (void *input);
+static zre_log_msg *
+    recv (void *input);
 
 //  Send the zre_log_msg to the output, and destroy it
 int
-    zre_log_msg_send (zre_log_msg_t **self_p, void *output);
+    send (void *output);
 
 //  Send the LOG to the output in one step
-int
-    zre_log_msg_send_log (void *output,
+static int
+    send_log (void *output,
         byte level,
         byte event,
         uint16_t node,
@@ -81,65 +84,69 @@ int
         char *data);
     
 //  Duplicate the zre_log_msg message
-zre_log_msg_t *
-    zre_log_msg_dup (zre_log_msg_t *self);
+zre_log_msg *
+    dup ();
 
 //  Print contents of message to stdout
 void
-    zre_log_msg_dump (zre_log_msg_t *self);
+    dump ();
 
 //  Get/set the message address
 zframe_t *
-    zre_log_msg_address (zre_log_msg_t *self);
+    address_get ();
 void
-    zre_log_msg_address_set (zre_log_msg_t *self, zframe_t *address);
+    address_set (zframe_t *address);
 
 //  Get the zre_log_msg id and printable command
 int
-    zre_log_msg_id (zre_log_msg_t *self);
+    id_get ();
 void
-    zre_log_msg_id_set (zre_log_msg_t *self, int id);
+    id_set (int id);
 char *
-    zre_log_msg_command (zre_log_msg_t *self);
+    command ();
 
 //  Get/set the level field
 byte
-    zre_log_msg_level (zre_log_msg_t *self);
+    level_get ();
 void
-    zre_log_msg_level_set (zre_log_msg_t *self, byte level);
+    level_set (byte level);
 
 //  Get/set the event field
 byte
-    zre_log_msg_event (zre_log_msg_t *self);
+    event_get ();
 void
-    zre_log_msg_event_set (zre_log_msg_t *self, byte event);
+    event_set (byte event);
 
 //  Get/set the node field
 uint16_t
-    zre_log_msg_node (zre_log_msg_t *self);
+    node_get ();
 void
-    zre_log_msg_node_set (zre_log_msg_t *self, uint16_t node);
+    node_set (uint16_t node);
 
 //  Get/set the peer field
 uint16_t
-    zre_log_msg_peer (zre_log_msg_t *self);
+    peer_get ();
 void
-    zre_log_msg_peer_set (zre_log_msg_t *self, uint16_t peer);
+    peer_set (uint16_t peer);
 
 //  Get/set the time field
 uint64_t
-    zre_log_msg_time (zre_log_msg_t *self);
+    time_get ();
 void
-    zre_log_msg_time_set (zre_log_msg_t *self, uint64_t time);
+    time_set (uint64_t time);
 
 //  Get/set the data field
 char *
-    zre_log_msg_data (zre_log_msg_t *self);
+    data_get ();
 void
-    zre_log_msg_data_set (zre_log_msg_t *self, char *format, ...);
+    data_set (char *format, ...);
+  
+private:
+	zre_log_msg_data_t* myData;
+};
 
 //  Self test of this class
 ZRE_EXPORT int
     zre_log_msg_test (bool verbose);
-    
+
 #endif

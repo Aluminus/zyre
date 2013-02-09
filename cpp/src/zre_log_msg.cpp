@@ -29,7 +29,7 @@
 
 //  Structure of our class
 
-struct _zre_log_msg_t {
+struct zre_log_msg_data_t {
     zframe_t *address;          //  Address of peer if any
     int id;                     //  zre_log_msg message ID
     byte *needle;               //  Read/write pointer for serialization
@@ -50,146 +50,141 @@ struct _zre_log_msg_t {
 
 //  Put a block to the frame
 #define PUT_BLOCK(host,size) { \
-    memcpy (self->needle, (host), size); \
-    self->needle += size; \
+    memcpy (myData->needle, (host), size); \
+    myData->needle += size; \
     }
 
 //  Get a block from the frame
 #define GET_BLOCK(host,size) { \
-    if (self->needle + size > self->ceiling) \
+    if (myData->needle + size > myData->ceiling) \
         goto malformed; \
-    memcpy ((host), self->needle, size); \
-    self->needle += size; \
+    memcpy ((host), myData->needle, size); \
+    myData->needle += size; \
     }
 
 //  Put a 1-byte number to the frame
 #define PUT_NUMBER1(host) { \
-    *(byte *) self->needle = (host); \
-    self->needle++; \
+    *(byte *) myData->needle = (host); \
+    myData->needle++; \
     }
 
 //  Put a 2-byte number to the frame
 #define PUT_NUMBER2(host) { \
-    self->needle [0] = (byte) (((host) >> 8)  & 255); \
-    self->needle [1] = (byte) (((host))       & 255); \
-    self->needle += 2; \
+    myData->needle [0] = (byte) (((host) >> 8)  & 255); \
+    myData->needle [1] = (byte) (((host))       & 255); \
+    myData->needle += 2; \
     }
 
 //  Put a 4-byte number to the frame
 #define PUT_NUMBER4(host) { \
-    self->needle [0] = (byte) (((host) >> 24) & 255); \
-    self->needle [1] = (byte) (((host) >> 16) & 255); \
-    self->needle [2] = (byte) (((host) >> 8)  & 255); \
-    self->needle [3] = (byte) (((host))       & 255); \
-    self->needle += 4; \
+    myData->needle [0] = (byte) (((host) >> 24) & 255); \
+    myData->needle [1] = (byte) (((host) >> 16) & 255); \
+    myData->needle [2] = (byte) (((host) >> 8)  & 255); \
+    myData->needle [3] = (byte) (((host))       & 255); \
+    myData->needle += 4; \
     }
 
 //  Put a 8-byte number to the frame
 #define PUT_NUMBER8(host) { \
-    self->needle [0] = (byte) (((host) >> 56) & 255); \
-    self->needle [1] = (byte) (((host) >> 48) & 255); \
-    self->needle [2] = (byte) (((host) >> 40) & 255); \
-    self->needle [3] = (byte) (((host) >> 32) & 255); \
-    self->needle [4] = (byte) (((host) >> 24) & 255); \
-    self->needle [5] = (byte) (((host) >> 16) & 255); \
-    self->needle [6] = (byte) (((host) >> 8)  & 255); \
-    self->needle [7] = (byte) (((host))       & 255); \
-    self->needle += 8; \
+    myData->needle [0] = (byte) (((host) >> 56) & 255); \
+    myData->needle [1] = (byte) (((host) >> 48) & 255); \
+    myData->needle [2] = (byte) (((host) >> 40) & 255); \
+    myData->needle [3] = (byte) (((host) >> 32) & 255); \
+    myData->needle [4] = (byte) (((host) >> 24) & 255); \
+    myData->needle [5] = (byte) (((host) >> 16) & 255); \
+    myData->needle [6] = (byte) (((host) >> 8)  & 255); \
+    myData->needle [7] = (byte) (((host))       & 255); \
+    myData->needle += 8; \
     }
 
 //  Get a 1-byte number from the frame
 #define GET_NUMBER1(host) { \
-    if (self->needle + 1 > self->ceiling) \
+    if (myData->needle + 1 > myData->ceiling) \
         goto malformed; \
-    (host) = *(byte *) self->needle; \
-    self->needle++; \
+    (host) = *(byte *) myData->needle; \
+    myData->needle++; \
     }
 
 //  Get a 2-byte number from the frame
 #define GET_NUMBER2(host) { \
-    if (self->needle + 2 > self->ceiling) \
+    if (myData->needle + 2 > myData->ceiling) \
         goto malformed; \
-    (host) = ((uint16_t) (self->needle [0]) << 8) \
-           +  (uint16_t) (self->needle [1]); \
-    self->needle += 2; \
+    (host) = ((uint16_t) (myData->needle [0]) << 8) \
+           +  (uint16_t) (myData->needle [1]); \
+    myData->needle += 2; \
     }
 
 //  Get a 4-byte number from the frame
 #define GET_NUMBER4(host) { \
-    if (self->needle + 4 > self->ceiling) \
+    if (myData->needle + 4 > myData->ceiling) \
         goto malformed; \
-    (host) = ((uint32_t) (self->needle [0]) << 24) \
-           + ((uint32_t) (self->needle [1]) << 16) \
-           + ((uint32_t) (self->needle [2]) << 8) \
-           +  (uint32_t) (self->needle [3]); \
-    self->needle += 4; \
+    (host) = ((uint32_t) (myData->needle [0]) << 24) \
+           + ((uint32_t) (myData->needle [1]) << 16) \
+           + ((uint32_t) (myData->needle [2]) << 8) \
+           +  (uint32_t) (myData->needle [3]); \
+    myData->needle += 4; \
     }
 
 //  Get a 8-byte number from the frame
 #define GET_NUMBER8(host) { \
-    if (self->needle + 8 > self->ceiling) \
+    if (myData->needle + 8 > myData->ceiling) \
         goto malformed; \
-    (host) = ((uint64_t) (self->needle [0]) << 56) \
-           + ((uint64_t) (self->needle [1]) << 48) \
-           + ((uint64_t) (self->needle [2]) << 40) \
-           + ((uint64_t) (self->needle [3]) << 32) \
-           + ((uint64_t) (self->needle [4]) << 24) \
-           + ((uint64_t) (self->needle [5]) << 16) \
-           + ((uint64_t) (self->needle [6]) << 8) \
-           +  (uint64_t) (self->needle [7]); \
-    self->needle += 8; \
+    (host) = ((uint64_t) (myData->needle [0]) << 56) \
+           + ((uint64_t) (myData->needle [1]) << 48) \
+           + ((uint64_t) (myData->needle [2]) << 40) \
+           + ((uint64_t) (myData->needle [3]) << 32) \
+           + ((uint64_t) (myData->needle [4]) << 24) \
+           + ((uint64_t) (myData->needle [5]) << 16) \
+           + ((uint64_t) (myData->needle [6]) << 8) \
+           +  (uint64_t) (myData->needle [7]); \
+    myData->needle += 8; \
     }
 
 //  Put a string to the frame
 #define PUT_STRING(host) { \
     string_size = strlen (host); \
     PUT_NUMBER1 (string_size); \
-    memcpy (self->needle, (host), string_size); \
-    self->needle += string_size; \
+    memcpy (myData->needle, (host), string_size); \
+    myData->needle += string_size; \
     }
 
 //  Get a string from the frame
 #define GET_STRING(host) { \
     GET_NUMBER1 (string_size); \
-    if (self->needle + string_size > (self->ceiling)) \
+    if (myData->needle + string_size > (myData->ceiling)) \
         goto malformed; \
     (host) = (char *) malloc (string_size + 1); \
-    memcpy ((host), self->needle, string_size); \
+    memcpy ((host), myData->needle, string_size); \
     (host) [string_size] = 0; \
-    self->needle += string_size; \
+    myData->needle += string_size; \
     }
 
 
 //  --------------------------------------------------------------------------
 //  Create a new zre_log_msg
 
-zre_log_msg_t *
-zre_log_msg_new (int id)
+zre_log_msg::zre_log_msg (int id)
 {
-    zre_log_msg_t *self = (zre_log_msg_t *) zmalloc (sizeof (zre_log_msg_t));
-    self->id = id;
-    return self;
+    myData = new zre_log_msg_data_t;
+    myData->id = id;
+	myData->address = nullptr;
+    myData->needle = nullptr;
+    myData->ceiling = nullptr;
+    myData->data = nullptr;
 }
 
 
 //  --------------------------------------------------------------------------
 //  Destroy the zre_log_msg
 
-void
-zre_log_msg_destroy (zre_log_msg_t **self_p)
+zre_log_msg::~zre_log_msg ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_log_msg_t *self = *self_p;
+    //  Free class properties
+    zframe_destroy (&myData->address);
+    free (myData->data);
 
-        //  Free class properties
-        zframe_destroy (&self->address);
-        free (self->data);
-
-        //  Free object itself
-        free (self);
-        *self_p = nullptr;
-    }
+    //  Free object itself
+    delete myData;
 }
 
 
@@ -197,24 +192,23 @@ zre_log_msg_destroy (zre_log_msg_t **self_p)
 //  Receive and parse a zre_log_msg from the socket. Returns new object or
 //  NULL if error. Will block if there's no message waiting.
 
-zre_log_msg_t *
-zre_log_msg_recv (void *input)
+zre_log_msg *
+zre_log_msg::recv (void *input)
 {
     assert (input);
-    zre_log_msg_t *self = zre_log_msg_new (0);
+    auto shell = new zre_log_msg(0);
+	auto myData = shell->myData;
     zframe_t *frame = nullptr;
     size_t string_size;
-    size_t list_size;
-    size_t hash_size;
 
     //  Read valid message frame from socket; we loop over any
     //  garbage data we might receive from badly-connected peers
     while (true) {
         //  If we're reading from a ROUTER socket, get address
         if (zsockopt_type (input) == ZMQ_ROUTER) {
-            zframe_destroy (&self->address);
-            self->address = zframe_recv (input);
-            if (!self->address)
+			zframe_destroy (&myData->address);
+            myData->address = zframe_recv (input);
+            if (!myData->address)
                 goto empty;         //  Interrupted
             if (!zsocket_rcvmore (input))
                 goto malformed;
@@ -225,8 +219,8 @@ zre_log_msg_recv (void *input)
             goto empty;             //  Interrupted
 
         //  Get and check protocol signature
-        self->needle = zframe_data (frame);
-        self->ceiling = self->needle + zframe_size (frame);
+        myData->needle = zframe_data (frame);
+        myData->ceiling = myData->needle + zframe_size (frame);
         uint16_t signature;
         GET_NUMBER2 (signature);
         if (signature == (0xAAA0 | 2))
@@ -240,17 +234,17 @@ zre_log_msg_recv (void *input)
         zframe_destroy (&frame);
     }
     //  Get message id and parse per message type
-    GET_NUMBER1 (self->id);
+    GET_NUMBER1 (myData->id);
 
-    switch (self->id) {
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
-            GET_NUMBER1 (self->level);
-            GET_NUMBER1 (self->event);
-            GET_NUMBER2 (self->node);
-            GET_NUMBER2 (self->peer);
-            GET_NUMBER8 (self->time);
-            free (self->data);
-            GET_STRING (self->data);
+            GET_NUMBER1 (myData->level);
+            GET_NUMBER1 (myData->event);
+            GET_NUMBER2 (myData->node);
+            GET_NUMBER2 (myData->peer);
+            GET_NUMBER8 (myData->time);
+            free (myData->data);
+            GET_STRING (myData->data);
             break;
 
         default:
@@ -258,14 +252,14 @@ zre_log_msg_recv (void *input)
     }
     //  Successful return
     zframe_destroy (&frame);
-    return self;
+    return shell;
 
     //  Error returns
     malformed:
-        printf ("E: malformed message '%d'\n", self->id);
+        printf ("E: malformed message '%d'\n", myData->id);
     empty:
         zframe_destroy (&frame);
-        zre_log_msg_destroy (&self);
+        delete shell;
         return nullptr;
 }
 
@@ -275,16 +269,13 @@ zre_log_msg_recv (void *input)
 //  Returns 0 if OK, else -1
 
 int
-zre_log_msg_send (zre_log_msg_t **self_p, void *output)
+zre_log_msg::send (void *output)
 {
     assert (output);
-    assert (self_p);
-    assert (*self_p);
 
     //  Calculate size of serialized data
-    zre_log_msg_t *self = *self_p;
     size_t frame_size = 2 + 1;          //  Signature and message ID
-    switch (self->id) {
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
             //  level is a 1-byte integer
             frame_size += 1;
@@ -298,32 +289,32 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
             frame_size += 8;
             //  data is a string with 1-byte length
             frame_size++;       //  Size is one octet
-            if (self->data)
-                frame_size += strlen (self->data);
+            if (myData->data)
+                frame_size += strlen (myData->data);
             break;
             
         default:
-            printf ("E: bad message type '%d', not sent\n", self->id);
+            printf ("E: bad message type '%d', not sent\n", myData->id);
             //  No recovery, this is a fatal application error
             assert (false);
     }
     //  Now serialize message into the frame
     zframe_t *frame = zframe_new (nullptr, frame_size);
-    self->needle = zframe_data (frame);
+    myData->needle = zframe_data (frame);
     size_t string_size;
     int frame_flags = 0;
     PUT_NUMBER2 (0xAAA0 | 2);
-    PUT_NUMBER1 (self->id);
+    PUT_NUMBER1 (myData->id);
 
-    switch (self->id) {
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
-            PUT_NUMBER1 (self->level);
-            PUT_NUMBER1 (self->event);
-            PUT_NUMBER2 (self->node);
-            PUT_NUMBER2 (self->peer);
-            PUT_NUMBER8 (self->time);
-            if (self->data) {
-                PUT_STRING (self->data);
+            PUT_NUMBER1 (myData->level);
+            PUT_NUMBER1 (myData->event);
+            PUT_NUMBER2 (myData->node);
+            PUT_NUMBER2 (myData->peer);
+            PUT_NUMBER8 (myData->time);
+            if (myData->data) {
+                PUT_STRING (myData->data);
             }
             else
                 PUT_NUMBER1 (0);    //  Empty string
@@ -332,25 +323,26 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
     }
     //  If we're sending to a ROUTER, we send the address first
     if (zsockopt_type (output) == ZMQ_ROUTER) {
-        assert (self->address);
-        if (zframe_send (&self->address, output, ZFRAME_MORE)) {
+        assert (myData->address);
+        if (zframe_send (&myData->address, output, ZFRAME_MORE)) {
             zframe_destroy (&frame);
-            zre_log_msg_destroy (self_p);
+            delete this;
             return -1;
         }
     }
     //  Now send the data frame
     if (zframe_send (&frame, output, frame_flags)) {
         zframe_destroy (&frame);
-        zre_log_msg_destroy (self_p);
+        delete this;
         return -1;
     }
     
     //  Now send any frame fields, in order
-    switch (self->id) {
+    switch (myData->id) {
+		// TODO!
     }
     //  Destroy zre_log_msg object
-    zre_log_msg_destroy (self_p);
+    delete this;
     return 0;
 }
 
@@ -359,7 +351,7 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
 //  Send the LOG to the socket in one step
 
 int
-zre_log_msg_send_log (
+zre_log_msg::send_log (
     void *output,
     byte level,
     byte event,
@@ -368,41 +360,39 @@ zre_log_msg_send_log (
     uint64_t time,
     char *data)
 {
-    zre_log_msg_t *self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
-    zre_log_msg_level_set (self, level);
-    zre_log_msg_event_set (self, event);
-    zre_log_msg_node_set (self, node);
-    zre_log_msg_peer_set (self, peer);
-    zre_log_msg_time_set (self, time);
-    zre_log_msg_data_set (self, data);
-    return zre_log_msg_send (&self, output);
+    auto self = new zre_log_msg (ZRE_LOG_MSG_LOG);
+    self->level_set(level);
+    self->event_set(event);
+    self->node_set(node);
+    self->peer_set(peer);
+    self->time_set(time);
+    self->data_set(data);
+	return self->send(output);
 }
 
 
 //  --------------------------------------------------------------------------
 //  Duplicate the zre_log_msg message
 
-zre_log_msg_t *
-zre_log_msg_dup (zre_log_msg_t *self)
+zre_log_msg *
+zre_log_msg::dup ()
 {
-    if (!self)
-        return NULL;
-        
-    zre_log_msg_t *copy = zre_log_msg_new (self->id);
-    if (self->address)
-        copy->address = zframe_dup (self->address);
-    switch (self->id) {
+    auto shell = new zre_log_msg(myData->id);
+	auto copy = shell->myData;
+    if (myData->address)
+        copy->address = zframe_dup (myData->address);
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
-            copy->level = self->level;
-            copy->event = self->event;
-            copy->node = self->node;
-            copy->peer = self->peer;
-            copy->time = self->time;
-            copy->data = strdup (self->data);
+            copy->level = myData->level;
+            copy->event = myData->event;
+            copy->node = myData->node;
+            copy->peer = myData->peer;
+            copy->time = myData->time;
+            copy->data = _strdup (myData->data);
             break;
 
     }
-    return copy;
+    return shell;
 }
 
 
@@ -411,19 +401,18 @@ zre_log_msg_dup (zre_log_msg_t *self)
 //  Print contents of message to stdout
 
 void
-zre_log_msg_dump (zre_log_msg_t *self)
+zre_log_msg::dump ()
 {
-    assert (self);
-    switch (self->id) {
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
             puts ("LOG:");
-            printf ("    level=%ld\n", (long) self->level);
-            printf ("    event=%ld\n", (long) self->event);
-            printf ("    node=%ld\n", (long) self->node);
-            printf ("    peer=%ld\n", (long) self->peer);
-            printf ("    time=%ld\n", (long) self->time);
-            if (self->data)
-                printf ("    data='%s'\n", self->data);
+            printf ("    level=%ld\n", (long) myData->level);
+            printf ("    event=%ld\n", (long) myData->event);
+            printf ("    node=%ld\n", (long) myData->node);
+            printf ("    peer=%ld\n", (long) myData->peer);
+            printf ("    time=%ld\n", (long) myData->time);
+            if (myData->data)
+                printf ("    data='%s'\n", myData->data);
             else
                 printf ("    data=\n");
             break;
@@ -436,18 +425,17 @@ zre_log_msg_dump (zre_log_msg_t *self)
 //  Get/set the message address
 
 zframe_t *
-zre_log_msg_address (zre_log_msg_t *self)
+zre_log_msg::address_get ()
 {
-    assert (self);
-    return self->address;
+    return myData->address;
 }
 
 void
-zre_log_msg_address_set (zre_log_msg_t *self, zframe_t *address)
+zre_log_msg::address_set (zframe_t *address)
 {
-    if (self->address)
-        zframe_destroy (&self->address);
-    self->address = zframe_dup (address);
+    if (myData->address)
+        zframe_destroy (&myData->address);
+    myData->address = zframe_dup (address);
 }
 
 
@@ -455,26 +443,24 @@ zre_log_msg_address_set (zre_log_msg_t *self, zframe_t *address)
 //  Get/set the zre_log_msg id
 
 int
-zre_log_msg_id (zre_log_msg_t *self)
+zre_log_msg::id_get ()
 {
-    assert (self);
-    return self->id;
+    return myData->id;
 }
 
 void
-zre_log_msg_id_set (zre_log_msg_t *self, int id)
+zre_log_msg::id_set (int id)
 {
-    self->id = id;
+    myData->id = id;
 }
 
 //  --------------------------------------------------------------------------
 //  Return a printable command string
 
 char *
-zre_log_msg_command (zre_log_msg_t *self)
+zre_log_msg::command ()
 {
-    assert (self);
-    switch (self->id) {
+    switch (myData->id) {
         case ZRE_LOG_MSG_LOG:
             return ("LOG");
             break;
@@ -486,17 +472,15 @@ zre_log_msg_command (zre_log_msg_t *self)
 //  Get/set the level field
 
 byte
-zre_log_msg_level (zre_log_msg_t *self)
+zre_log_msg::level_get ()
 {
-    assert (self);
-    return self->level;
+    return myData->level;
 }
 
 void
-zre_log_msg_level_set (zre_log_msg_t *self, byte level)
+zre_log_msg::level_set (byte level)
 {
-    assert (self);
-    self->level = level;
+    myData->level = level;
 }
 
 
@@ -504,17 +488,15 @@ zre_log_msg_level_set (zre_log_msg_t *self, byte level)
 //  Get/set the event field
 
 byte
-zre_log_msg_event (zre_log_msg_t *self)
+zre_log_msg::event_get ()
 {
-    assert (self);
-    return self->event;
+    return myData->event;
 }
 
 void
-zre_log_msg_event_set (zre_log_msg_t *self, byte event)
+zre_log_msg::event_set (byte event)
 {
-    assert (self);
-    self->event = event;
+    myData->event = event;
 }
 
 
@@ -522,17 +504,15 @@ zre_log_msg_event_set (zre_log_msg_t *self, byte event)
 //  Get/set the node field
 
 uint16_t
-zre_log_msg_node (zre_log_msg_t *self)
+zre_log_msg::node_get ()
 {
-    assert (self);
-    return self->node;
+    return myData->node;
 }
 
 void
-zre_log_msg_node_set (zre_log_msg_t *self, uint16_t node)
+zre_log_msg::node_set (uint16_t node)
 {
-    assert (self);
-    self->node = node;
+    myData->node = node;
 }
 
 
@@ -540,17 +520,15 @@ zre_log_msg_node_set (zre_log_msg_t *self, uint16_t node)
 //  Get/set the peer field
 
 uint16_t
-zre_log_msg_peer (zre_log_msg_t *self)
+zre_log_msg::peer_get ()
 {
-    assert (self);
-    return self->peer;
+    return myData->peer;
 }
 
 void
-zre_log_msg_peer_set (zre_log_msg_t *self, uint16_t peer)
+zre_log_msg::peer_set (uint16_t peer)
 {
-    assert (self);
-    self->peer = peer;
+    myData->peer = peer;
 }
 
 
@@ -558,17 +536,15 @@ zre_log_msg_peer_set (zre_log_msg_t *self, uint16_t peer)
 //  Get/set the time field
 
 uint64_t
-zre_log_msg_time (zre_log_msg_t *self)
+zre_log_msg::time_get ()
 {
-    assert (self);
-    return self->time;
+    return myData->time;
 }
 
 void
-zre_log_msg_time_set (zre_log_msg_t *self, uint64_t time)
+zre_log_msg::time_set (uint64_t time)
 {
-    assert (self);
-    self->time = time;
+    myData->time = time;
 }
 
 
@@ -576,23 +552,21 @@ zre_log_msg_time_set (zre_log_msg_t *self, uint64_t time)
 //  Get/set the data field
 
 char *
-zre_log_msg_data (zre_log_msg_t *self)
+zre_log_msg::data_get ()
 {
-    assert (self);
-    return self->data;
+    return myData->data;
 }
 
 void
-zre_log_msg_data_set (zre_log_msg_t *self, char *format, ...)
+zre_log_msg::data_set (char *format, ...)
 {
     //  Format into newly allocated string
-    assert (self);
     va_list argptr;
     va_start (argptr, format);
-    free (self->data);
-    self->data = (char *) malloc (STRING_MAX + 1);
-    assert (self->data);
-    vsnprintf (self->data, STRING_MAX, format, argptr);
+    free (myData->data);
+    myData->data = (char *) malloc (STRING_MAX + 1);
+    assert (myData->data);
+    vsnprintf (myData->data, STRING_MAX, format, argptr);
     va_end (argptr);
 }
 
@@ -607,9 +581,9 @@ zre_log_msg_test (bool verbose)
     printf (" * zre_log_msg: ");
 
     //  Simple create/destroy test
-    zre_log_msg_t *self = zre_log_msg_new (0);
+    auto self = new zre_log_msg (0);
     assert (self);
-    zre_log_msg_destroy (&self);
+    delete self;
 
     //  Create pair of sockets we can send through
     zctx_t *ctx = zctx_new ();
@@ -624,24 +598,24 @@ zre_log_msg_test (bool verbose)
     
     //  Encode/send/decode and verify each message type
 
-    self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
-    zre_log_msg_level_set (self, 123);
-    zre_log_msg_event_set (self, 123);
-    zre_log_msg_node_set (self, 123);
-    zre_log_msg_peer_set (self, 123);
-    zre_log_msg_time_set (self, 123);
-    zre_log_msg_data_set (self, "Life is short but Now lasts for ever");
-    zre_log_msg_send (&self, output);
+    self = new zre_log_msg (ZRE_LOG_MSG_LOG);
+    self->level_set(123);
+    self->event_set(123);
+    self->node_set(123);
+    self->peer_set(123);
+    self->time_set(123);
+    self->data_set("Life is short but Now lasts for ever");
+	self->send(output);
     
-    self = zre_log_msg_recv (input);
+	self = zre_log_msg::recv(input);
     assert (self);
-    assert (zre_log_msg_level (self) == 123);
-    assert (zre_log_msg_event (self) == 123);
-    assert (zre_log_msg_node (self) == 123);
-    assert (zre_log_msg_peer (self) == 123);
-    assert (zre_log_msg_time (self) == 123);
-    assert (streq (zre_log_msg_data (self), "Life is short but Now lasts for ever"));
-    zre_log_msg_destroy (&self);
+	assert (self->level_get() == 123);
+	assert (self->event_get() == 123);
+	assert (self->node_get() == 123);
+	assert (self->peer_get() == 123);
+	assert (self->time_get() == 123);
+	assert (streq (self->data_get(), "Life is short but Now lasts for ever"));
+    delete self;
 
     zctx_destroy (&ctx);
     printf ("OK\n");
