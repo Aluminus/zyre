@@ -48,7 +48,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
     };
     //  Do something once a second
     int64_t trigger = zclock_time () + 1000;
-    while (!zctx_interrupted()) {
+    while (!zctx_is_interrupted()) {
         if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
         
@@ -182,7 +182,7 @@ int main (int argc, char *argv [])
     void **pipes = (void**)zmalloc (sizeof (void *) * max_node);
 
     //  We will randomly start and stop node threads
-    while (!zctx_interrupted()) {
+    while (!zctx_is_interrupted()) {
         uint index = randof (max_node);
         //  Toggle node thread
         if (pipes [index]) {
