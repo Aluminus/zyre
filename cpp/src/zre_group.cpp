@@ -58,7 +58,7 @@ zre_group::zre_group (char *name, zhash_t *container)
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, name, myData);
+        zhash_insert (container, name, this);
         zhash_freefn (container, name, s_delete_group);
     }
 }

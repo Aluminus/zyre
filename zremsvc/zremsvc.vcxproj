@@ -53,8 +53,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files\OpenSSL-Win32\lib\VC\static;C:\Program Files\ZeroMQ 3.2.2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libzmq_d.lib;czmq_d.lib;filemq_d.lib;ssleay32MT.lib;Iphlpapi.lib;libeay32MT.lib;Ws2_32.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\ZeroMQ 3.2.2\lib;C:\Program Files\OpenSSL-Win32\lib\VC\static;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libzmq_d.lib;czmq_d.lib;filemq_d.lib;Iphlpapi.lib;Ws2_32.lib;Rpcrt4.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
