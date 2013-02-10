@@ -1,8 +1,9 @@
 Features of the C++ ZRE Project
 ========================
 - Modern C++11 Style
-- Intuitive interfaces
+- Intuitive interfaces comparable to CZMQ and CPPZMQ
 - Type safety
 - Const correctness
-- Exception safety
 - Resource management objects
+- Use of stateless lambdas for callbacks
+- (Windows only) Memory leak detection
