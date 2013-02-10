@@ -64,7 +64,7 @@ zre_peer::zre_peer (char *identity, zhash_t *container, zctx_t *ctx)
 {
     myData = (zre_peer_data_t *) zmalloc (sizeof (zre_peer_data_t));
     myData->ctx = ctx;
-    myData->identity = strdup (identity);
+    myData->identity = _strdup (identity);
     myData->ready = false;
     myData->connected = false;
     myData->sent_sequence = 0;
@@ -115,7 +115,7 @@ zre_peer::connect (char *reply_to, char *endpoint)
 
         //  Connect through to peer node
         zsocket_connect (myData->mailbox, "tcp://%s", endpoint);
-        myData->endpoint = strdup (endpoint);
+        myData->endpoint = _strdup (endpoint);
         myData->connected = true;
         myData->ready = false;
     }
@@ -144,17 +144,17 @@ zre_peer::disconnect ()
 //  Send message to peer
 
 int
-zre_peer::send (zre_msg_t **msg_p)
+zre_peer::send (zre_msg **msg_p)
 {
     if (myData->connected) {
-        zre_msg_sequence_set (*msg_p, ++(myData->sent_sequence));
-        if (zre_msg_send (msg_p, myData->mailbox) && errno == EAGAIN) {
+        (*msg_p)->sequence_set(++(myData->sent_sequence));
+		if ((*msg_p)->send(myData->mailbox) && errno == EAGAIN) {
             disconnect ();
             return -1;
         }
     }
     else
-        zre_msg_destroy (msg_p);
+        delete msg_p;
     
     return 0;
 }
@@ -297,10 +297,10 @@ zre_peer::headers_set (zhash_t *headers)
 //  Check peer message sequence
 
 bool
-zre_peer::check_message (zre_msg_t *msg)
+zre_peer::check_message (zre_msg *msg)
 {
     assert (msg);
-    uint16_t recd_sequence = zre_msg_sequence (msg);
+	uint16_t recd_sequence = msg->sequence_get();
 
     bool valid = (++(myData->want_sequence) == recd_sequence);
     if (!valid)

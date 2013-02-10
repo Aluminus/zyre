@@ -104,7 +104,7 @@ static int
 s_peer_send (const char *key, void *item, void *argument)
 {
     zre_peer *peer = (zre_peer *) item;
-    zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
+    auto msg = ((zre_msg *) argument)->dup();
 	peer->send(&msg);
     return 0;
 }
@@ -113,8 +113,8 @@ s_peer_send (const char *key, void *item, void *argument)
 //  Send message to all peers in group
 
 void
-zre_group::send (zre_msg_t **msg_p)
+zre_group::send (zre_msg **msg_p)
 {
     zhash_foreach (myData->peers, s_peer_send, *msg_p);
-    zre_msg_destroy (msg_p);
+    delete (*msg_p);
 }

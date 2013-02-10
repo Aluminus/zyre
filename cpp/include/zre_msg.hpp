@@ -70,27 +70,29 @@
 #define ZRE_MSG_PING_OK                     7
 
 //  Opaque class structure
-typedef struct _zre_msg_t zre_msg_t;
+struct zre_msg_data_t;
+
+class zre_msg
+{
+public:
 
 //  Create a new zre_msg
-zre_msg_t *
-    zre_msg_new (int id);
+    zre_msg (int id);
 
 //  Destroy the zre_msg
-void
-    zre_msg_destroy (zre_msg_t **self_p);
+    ~zre_msg ();
 
 //  Receive and parse a zre_msg from the input
-zre_msg_t *
-    zre_msg_recv (void *input);
+static zre_msg *
+    recv (void *input);
 
 //  Send the zre_msg to the output, and destroy it
 int
-    zre_msg_send (zre_msg_t **self_p, void *output);
+    send (void *output);
 
 //  Send the HELLO to the output in one step
-int
-    zre_msg_send_hello (void *output,
+static int
+    send_hello (void *output,
         uint16_t sequence,
         char *ipaddress,
         uint16_t mailbox,
@@ -99,131 +101,143 @@ int
         zhash_t *headers);
     
 //  Send the WHISPER to the output in one step
-int
-    zre_msg_send_whisper (void *output,
+static int
+    send_whisper (void *output,
         uint16_t sequence,
         zframe_t *content);
     
 //  Send the SHOUT to the output in one step
-int
-    zre_msg_send_shout (void *output,
+static int
+    send_shout (void *output,
         uint16_t sequence,
         char *group,
         zframe_t *content);
     
 //  Send the JOIN to the output in one step
-int
-    zre_msg_send_join (void *output,
+static int
+    send_join (void *output,
         uint16_t sequence,
         char *group,
         byte status);
     
 //  Send the LEAVE to the output in one step
-int
-    zre_msg_send_leave (void *output,
+static int
+    send_leave (void *output,
         uint16_t sequence,
         char *group,
         byte status);
     
 //  Send the PING to the output in one step
-int
-    zre_msg_send_ping (void *output,
+static int
+    send_ping (void *output,
         uint16_t sequence);
     
 //  Send the PING_OK to the output in one step
-int
-    zre_msg_send_ping_ok (void *output,
+static int
+    send_ping_ok (void *output,
         uint16_t sequence);
     
 //  Duplicate the zre_msg message
-zre_msg_t *
-    zre_msg_dup (zre_msg_t *self);
+zre_msg *
+    dup ();
 
 //  Print contents of message to stdout
 void
-    zre_msg_dump (zre_msg_t *self);
+    dump ();
 
 //  Get/set the message address
 zframe_t *
-    zre_msg_address (zre_msg_t *self);
+    address_get ();
 void
-    zre_msg_address_set (zre_msg_t *self, zframe_t *address);
+    address_set (zframe_t *address);
 
 //  Get the zre_msg id and printable command
 int
-    zre_msg_id (zre_msg_t *self);
+    id_get ();
 void
-    zre_msg_id_set (zre_msg_t *self, int id);
+    id_set (int id);
 char *
-    zre_msg_command (zre_msg_t *self);
+    command_get ();
 
 //  Get/set the sequence field
 uint16_t
-    zre_msg_sequence (zre_msg_t *self);
+    sequence_get ();
 void
-    zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence);
+    sequence_set (uint16_t sequence);
 
 //  Get/set the ipaddress field
 char *
-    zre_msg_ipaddress (zre_msg_t *self);
+    ipaddress_get ();
 void
-    zre_msg_ipaddress_set (zre_msg_t *self, char *format, ...);
+    ipaddress_set (char *format, ...);
 
 //  Get/set the mailbox field
 uint16_t
-    zre_msg_mailbox (zre_msg_t *self);
+    mailbox_get ();
 void
-    zre_msg_mailbox_set (zre_msg_t *self, uint16_t mailbox);
+    mailbox_set (uint16_t mailbox);
 
 //  Get/set the groups field
 zlist_t *
-    zre_msg_groups (zre_msg_t *self);
+    groups_get ();
 void
-    zre_msg_groups_set (zre_msg_t *self, zlist_t *groups);
+    groups_set (zlist_t *groups);
 
 //  Iterate through the groups field, and append a groups value
 char *
-    zre_msg_groups_first (zre_msg_t *self);
+    groups_first ();
 char *
-    zre_msg_groups_next (zre_msg_t *self);
+    groups_next ();
 void
-    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
+    groups_append (char *format, ...);
 size_t
-    zre_msg_groups_size (zre_msg_t *self);
+    groups_size ();
 
 //  Get/set the status field
 byte
-    zre_msg_status (zre_msg_t *self);
+    status_get ();
 void
-    zre_msg_status_set (zre_msg_t *self, byte status);
+    status_set (byte status);
 
 //  Get/set the headers field
 zhash_t *
-    zre_msg_headers (zre_msg_t *self);
+    headers_get ();
 void
-    zre_msg_headers_set (zre_msg_t *self, zhash_t *headers);
+    headers_set (zhash_t *headers);
     
 //  Get/set a value in the headers dictionary
 char *
-    zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value);
+    headers_string (char *key, char *default_value);
 uint64_t
-    zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value);
+    headers_number (char *key, uint64_t default_value);
 void
-    zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...);
+    headers_insert (char *key, char *format, ...);
 size_t
-    zre_msg_headers_size (zre_msg_t *self);
+    headers_size ();
 
 //  Get/set the content field
 zframe_t *
-    zre_msg_content (zre_msg_t *self);
+    content_get ();
 void
-    zre_msg_content_set (zre_msg_t *self, zframe_t *frame);
+    content_set (zframe_t *frame);
 
 //  Get/set the group field
 char *
-    zre_msg_group (zre_msg_t *self);
+    group_get ();
 void
-    zre_msg_group_set (zre_msg_t *self, char *format, ...);
+    group_set (char *format, ...);
+
+//  Count size of key=value pair
+static int
+s_headers_count (const char *key, void *item, void *argument);
+
+//  Serialize headers key=value pair
+static int
+s_headers_write (const char *key, void *item, void *argument);
+
+private:
+	zre_msg_data_t* myData;
+};
 
 //  Self test of this class
 ZRE_EXPORT int

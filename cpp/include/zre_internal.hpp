@@ -28,6 +28,7 @@
 #define __ZRE_INTERNAL_H_INCLUDED__
 
 #ifdef __WINDOWS__
+#undef assert
 #define assert(expr) _ASSERTE(expr)
 #endif
 

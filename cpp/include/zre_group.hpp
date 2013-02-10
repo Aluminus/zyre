@@ -49,7 +49,7 @@ void
 
 //  Send message to all peers in group
 void
-    send (zre_msg_t **msg_p);
+    send (zre_msg **msg_p);
 
 private:
 	zre_group_data_t* myData;

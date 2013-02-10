@@ -58,7 +58,7 @@ char *
 
 //  Send message to peer
 int
-    send (zre_msg_t **msg_p);
+    send (zre_msg **msg_p);
 
 //  Return peer identity string
 char *
@@ -102,7 +102,7 @@ void
 
 //  Check peer message sequence
 bool
-    check_message (zre_msg_t *msg);
+    check_message (zre_msg *msg);
 
 private:
 	zre_peer_data_t* myData;
