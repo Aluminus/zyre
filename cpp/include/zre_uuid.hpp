@@ -29,35 +29,41 @@
 
 #define ZRE_UUID_LEN    16
 
-typedef struct _zre_uuid_t zre_uuid_t;
+struct zre_uuid_data_t;
+
+class zre_uuid
+{
+public:
 
 //  Constructor
-zre_uuid_t *
-    zre_uuid_new (void);
+    zre_uuid ();
 
 //  Destructor
-void
-    zre_uuid_destroy (zre_uuid_t **self_p);
+    ~zre_uuid ();
 
 //  Returns UUID as string
 char *
-    zre_uuid_str (zre_uuid_t *self);
+    str ();
 
 //  Set UUID to new supplied value 
 void
-    zre_uuid_set (zre_uuid_t *self, byte *source);
+    set (byte *source);
     
 //  Store UUID blob in target array
 void
-    zre_uuid_cpy (zre_uuid_t *self, byte *target);
+    cpy (byte *target);
 
 //  Check if UUID is same as supplied value
 bool
-    zre_uuid_eq (zre_uuid_t *self, byte *compare);
+    eq (byte *compare);
 
 //  Check if UUID is different from supplied value
 bool
-    zre_uuid_neq (zre_uuid_t *self, byte *compare);
+    neq (byte *compare);
+
+private:
+	zre_uuid_data_t* myData;
+};
 
 //  Self test of this class
 ZRE_EXPORT int

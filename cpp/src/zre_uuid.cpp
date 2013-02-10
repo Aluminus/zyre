@@ -32,7 +32,7 @@
 
 //  Structure of our class
 
-struct _zre_uuid_t {
+struct zre_uuid_data_t {
     byte uuid [ZRE_UUID_LEN];           //  Binary UUID
     char str [ZRE_UUID_LEN * 2 + 1];    //  Printable UUID
 };
@@ -41,37 +41,29 @@ struct _zre_uuid_t {
 //  --------------------------------------------------------------------------
 //  Constructor
 
-zre_uuid_t *
-zre_uuid_new (void)
+zre_uuid::zre_uuid ()
 {
-    zre_uuid_t *self = (zre_uuid_t *) zmalloc (sizeof (zre_uuid_t));
+    myData = new zre_uuid_data_t;
 #if defined (__WINDOWS__)
     UUID uuid;
     assert (sizeof (uuid) == ZRE_UUID_LEN);
     UuidCreate (&uuid);
-    zre_uuid_set (self, (byte *) &uuid);
+    set((byte *) &uuid);
 #else
     uuid_t uuid;
     assert (sizeof (uuid) == ZRE_UUID_LEN);
     uuid_generate (uuid);
-    zre_uuid_set (self, (byte *) uuid);
+    set((byte *) uuid);
 #endif
-    return self;
 }
 
 
 //  -----------------------------------------------------------------
 //  Destructor
 
-void
-zre_uuid_destroy (zre_uuid_t **self_p)
+zre_uuid::~zre_uuid ()
 {
-    assert (self_p);
-    if (*self_p) {
-        zre_uuid_t *self = *self_p;
-        free (self);
-        *self_p = NULL;
-    }
+    delete myData;
 }
 
 
@@ -79,18 +71,17 @@ zre_uuid_destroy (zre_uuid_t **self_p)
 //  Set UUID to new supplied value
 
 void
-zre_uuid_set (zre_uuid_t *self, byte *source)
+zre_uuid::set (byte *source)
 {
-    assert (self);
-    memcpy (self->uuid, source, ZRE_UUID_LEN);
+    memcpy (myData->uuid, source, ZRE_UUID_LEN);
     char hex_char [] = "0123456789ABCDEF";
     int byte_nbr;
     for (byte_nbr = 0; byte_nbr < ZRE_UUID_LEN; byte_nbr++) {
-        uint val = (self->uuid) [byte_nbr];
-        self->str [byte_nbr * 2 + 0] = hex_char [val >> 4];
-        self->str [byte_nbr * 2 + 1] = hex_char [val & 15];
+        uint val = (myData->uuid) [byte_nbr];
+        myData->str [byte_nbr * 2 + 0] = hex_char [val >> 4];
+        myData->str [byte_nbr * 2 + 1] = hex_char [val & 15];
     }
-    self->str [ZRE_UUID_LEN * 2] = 0;
+    myData->str [ZRE_UUID_LEN * 2] = 0;
 }
 
 
@@ -98,10 +89,9 @@ zre_uuid_set (zre_uuid_t *self, byte *source)
 //  Returns UUID as string
 
 char *
-zre_uuid_str (zre_uuid_t *self)
+zre_uuid::str ()
 {
-    assert (self);
-    return self->str;
+    return myData->str;
 }
 
 
@@ -109,10 +99,9 @@ zre_uuid_str (zre_uuid_t *self)
 //  Store UUID blob in target array
 
 void
-zre_uuid_cpy (zre_uuid_t *self, byte *target)
+zre_uuid::cpy (byte *target)
 {
-    assert (self);
-    memcpy (target, self->uuid, ZRE_UUID_LEN);
+    memcpy (target, myData->uuid, ZRE_UUID_LEN);
 }
 
 
@@ -120,10 +109,9 @@ zre_uuid_cpy (zre_uuid_t *self, byte *target)
 //  Check if UUID is same as supplied value
 
 bool
-zre_uuid_eq (zre_uuid_t *self, byte *compare)
+zre_uuid::eq (byte *compare)
 {
-    assert (self);
-    return (memcmp (self->uuid, compare, ZRE_UUID_LEN) == 0);
+    return (memcmp (myData->uuid, compare, ZRE_UUID_LEN) == 0);
 }
 
 
@@ -131,10 +119,9 @@ zre_uuid_eq (zre_uuid_t *self, byte *compare)
 //  Check if UUID is different from supplied value
 
 bool
-zre_uuid_neq (zre_uuid_t *self, byte *compare)
+zre_uuid::neq (byte *compare)
 {
-    assert (self);
-    return (memcmp (self->uuid, compare, ZRE_UUID_LEN) != 0);
+    return (memcmp (myData->uuid, compare, ZRE_UUID_LEN) != 0);
 }
 
 
@@ -147,10 +134,10 @@ zre_uuid_test (bool verbose)
     printf (" * zre_uuid: ");
 
     //  Simple create/destroy test
-    zre_uuid_t *self = zre_uuid_new ();
+    auto self = new zre_uuid ();
     assert (self);
-    assert (strlen (zre_uuid_str (self)) == 32);
-    zre_uuid_destroy (&self);
+	assert (strlen (self->str()) == 32);
+    delete self;
 
     printf ("OK\n");
     return 0;

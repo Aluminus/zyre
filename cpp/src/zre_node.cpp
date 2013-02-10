@@ -266,7 +266,7 @@ private:
     void *pipe;                 //  Pipe back to application
     zre_udp *udp;             //  UDP object
     zre_log *log;             //  Log object
-    zre_uuid_t *uuid;           //  Our UUID as object
+    zre_uuid *uuid;           //  Our UUID as object
     char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
@@ -303,8 +303,8 @@ agent::agent(zctx_t *agentContext, void *agentPipe)
         delete udp;
         return;
     }
-    uuid = zre_uuid_new ();
-    identity = _strdup (zre_uuid_str (uuid));
+    uuid = new zre_uuid ();
+	identity = _strdup (uuid->str());
     peers = zhash_new ();
     peer_groups = zhash_new ();
     own_groups = zhash_new ();
@@ -689,7 +689,7 @@ agent::beacon_send ()
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
     beacon.port = htons (port);
-    zre_uuid_cpy (uuid, beacon.uuid);
+	uuid->cpy(beacon.uuid);
     
     //  Broadcast the beacon to anyone who is listening
     udp->send((byte *) &beacon, sizeof (beacon_t));
@@ -714,13 +714,13 @@ agent::recv_udp_beacon ()
         return 0;               //  Ignore invalid beacons
 
     //  If we got a UUID and it's not our own beacon, we have a peer
-    if (zre_uuid_neq (uuid, beacon.uuid)) {
-        zre_uuid_t *uuid = zre_uuid_new ();
-        zre_uuid_set (uuid, beacon.uuid);
+	if (uuid->neq(beacon.uuid)) {
+        auto uuid = new zre_uuid ();
+		uuid->set(beacon.uuid);
         zre_peer *peer = s_require_peer (
-            zre_uuid_str (uuid), udp->from(), ntohs (beacon.port));
+			uuid->str(), udp->from(), ntohs (beacon.port));
 		peer->refresh();
-        zre_uuid_destroy (&uuid);
+        delete uuid;
     }
     return 0;
 }
