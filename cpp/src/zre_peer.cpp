@@ -47,16 +47,6 @@ struct zre_peer_data_t {
 };
 
 
-//  Callback when we remove peer from container
-
-static void
-s_delete_peer (void *argument)
-{
-    zre_peer *peer = (zre_peer *) argument;
-    delete(peer);
-}
-
-
 //  ---------------------------------------------------------------------
 //  Construct new peer object
 
@@ -73,7 +63,12 @@ zre_peer::zre_peer (char *identity, zhash_t *container, zctx_t *ctx)
     //  Insert into container if requested
     if (container) {
         zhash_insert (container, identity, this);
-        zhash_freefn (container, identity, s_delete_peer);
+        zhash_freefn (container, identity, [] (void *argument)
+		//  Callback when we remove peer from container
+		{
+			zre_peer *peer = (zre_peer *) argument;
+			delete(peer);
+		});
     }
 }
 

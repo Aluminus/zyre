@@ -37,16 +37,6 @@ struct zre_group_data_t {
 };
 
 
-//  Callback when we remove group from container
-
-static void
-s_delete_group (void *argument)
-{
-    zre_group *group = (zre_group *) argument;
-    delete group;
-}
-
-
 //  ---------------------------------------------------------------------
 //  Construct new group object
 
@@ -59,7 +49,12 @@ zre_group::zre_group (char *name, zhash_t *container)
     //  Insert into container if requested
     if (container) {
         zhash_insert (container, name, this);
-        zhash_freefn (container, name, s_delete_group);
+        zhash_freefn (container, name, [] (void *argument)
+		//  Callback when we remove group from container
+		{
+			zre_group *group = (zre_group *) argument;
+			delete group;
+		});
     }
 }
 
