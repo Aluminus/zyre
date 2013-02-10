@@ -154,7 +154,7 @@ zre_peer::send (zre_msg **msg_p)
         }
     }
     else
-        delete msg_p;
+        delete (*msg_p);
     
     return 0;
 }
